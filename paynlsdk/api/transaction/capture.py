@@ -8,6 +8,25 @@ from paynlsdk.objects import ErrorSchema
 from paynlsdk.validators import ParamValidator
 
 
+class Response(ResponseBase):
+    def __init__(self,
+                 *args, **kwargs):
+        # we will force a result since we only have the error object
+        self.result = kwargs['request'].result
+        super().__init__(**kwargs)
+
+    def __repr__(self):
+        return self.__dict__.__str__()
+
+
+class ResponseSchema(Schema):
+    request = fields.Nested(ErrorSchema)
+
+    @post_load
+    def create_response(self, data):
+        return Response(**data)
+
+
 class Request(RequestBase):
     def __init__(self, transaction_id: str=None, products: dict={}, tracktrace: str=None):
         self.transaction_id = transaction_id
@@ -55,28 +74,24 @@ class Request(RequestBase):
         self._response, errors = schema.load(dict)
         self.handle_schema_errors(errors)
 
+    @property
+    def response(self) -> Response:
+        """
+        Return the API :class:`Response` for the validation request
+
+        :return: The API response
+        :rtype: paynlsdk.api.transaction.capture.Response
+        """
+        return self._response
+
+    @response.setter
+    def response(self, response: Response):
+        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
+        self._response = response
+
     def add_product(self, product_id: str, quantity: int):
         if product_id in self.products:
             self.products[product_id] += quantity
         else:
             self.products[product_id] = quantity
-
-
-class Response(ResponseBase):
-    def __init__(self,
-                 *args, **kwargs):
-        # we will force a result since we only have the error object
-        self.result = kwargs['request'].result
-        super().__init__(**kwargs)
-
-    def __repr__(self):
-        return self.__dict__.__str__()
-
-
-class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema)
-
-    @post_load
-    def create_response(self, data):
-        return Response(**data)
 

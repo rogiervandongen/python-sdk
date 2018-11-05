@@ -88,17 +88,11 @@ class Request(RequestBase):
                  amount: int=None,
                  description: str=None,
                  process_date: str=None,
-                 products: dict={},
-                 vat_percentage: float=None,
-                 exchange_url: str=None,
                  ):
         self.transaction_id = transaction_id
         self.amount = amount
         self.description = description
         self.process_date = process_date
-        self.products = products
-        self.vat_percentage = vat_percentage
-        self.exchange_url = exchange_url
         super().__init__()
 
     def requires_api_token(self):

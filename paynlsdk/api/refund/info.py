@@ -4,8 +4,39 @@ from marshmallow import Schema, fields, post_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import ErrorSchema, RefundInfo
+from paynlsdk.objects import ErrorSchema, RefundInfo, RefundInfoSchema
 from paynlsdk.validators import ParamValidator
+
+
+class Response(ResponseBase):
+    def __init__(self,
+                 refund_id: str=None,
+                 refund: RefundInfo=None,
+                 *args, **kwargs):
+        self.refundid = refund_id
+        self.refund = refund
+        super().__init__(**kwargs)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def is_refunded(self) -> bool:
+        """
+        Check if refund is processed
+        :return: indication whether the refund has been processed or not
+        :rtype: bool
+        """
+        return self.refund.status_name == 'Verwerkt'
+
+
+class ResponseSchema(Schema):
+    request = fields.Nested(ErrorSchema, required=True)
+    refund_id = fields.String(required=True, load_from='refundId')
+    refund = fields.Nested(RefundInfoSchema, required=True, load_from='refund')
+
+    @post_load
+    def create_response(self, data):
+        return Response(**data)
 
 
 class Request(RequestBase):
@@ -49,24 +80,18 @@ class Request(RequestBase):
         self._response, errors = schema.load(dict)
         self.handle_schema_errors(errors)
 
+    @property
+    def response(self) -> Response:
+        """
+        Return the API :class:`Response` for the validation request
 
-class Response(ResponseBase):
-    def __init__(self,
-                 refund=None,
-                 *args, **kwargs):
-        self.refund = refund
-        super().__init__(**kwargs)
+        :return: The API response
+        :rtype: paynlsdk.api.refund.info.Response
+        """
+        return self._response
 
-    def __repr__(self):
-        return str(self.__dict__)
-
-
-class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema, required=True)
-    refund = fields.Nested(RefundInfo, required=True, load_from='refund')
-
-    @post_load
-    def create_response(self, data):
-        return Response(**data)
-
+    @response.setter
+    def response(self, response: Response):
+        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
+        self._response = response
 

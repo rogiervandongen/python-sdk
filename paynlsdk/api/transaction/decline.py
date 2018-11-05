@@ -8,6 +8,27 @@ from paynlsdk.objects import ErrorSchema
 from paynlsdk.validators import ParamValidator
 
 
+class Response(ResponseBase):
+    def __init__(self,
+                 result: bool=None,
+                 message: str=None,
+                 *args, **kwargs):
+        self.result = result
+        self.message = message
+        super().__init__(**kwargs)
+
+
+class ResponseSchema(Schema):
+    request = fields.Nested(ErrorSchema)
+    message = fields.String(required=False)
+
+    @post_load
+    def create_response(self, data):
+        #  We will map the result to a Response internal value
+        data['result'] = data['request']['result']
+        return Response(**data)
+
+
 class Request(RequestBase):
     def __init__(self, order_id: str=None, entrance_code: str=None):
         self.order_id = order_id
@@ -52,20 +73,18 @@ class Request(RequestBase):
         self._response, errors = schema.load(dict)
         self.handle_schema_errors(errors)
 
+    @property
+    def response(self) -> Response:
+        """
+        Return the API :class:`Response` for the validation request
 
-class Response(ResponseBase):
-    def __init__(self,
-                 message: str=None,
-                 *args, **kwargs):
-        self.message = message
-        super().__init__(**kwargs)
+        :return: The API response
+        :rtype: paynlsdk.api.transaction.decline.Response
+        """
+        return self._response
 
-
-class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema)
-    message = fields.String(required=False)
-
-    @post_load
-    def create_response(self, data):
-        return Response(**data)
+    @response.setter
+    def response(self, response: Response):
+        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
+        self._response = response
 

@@ -4,11 +4,25 @@ from paynlsdk.validators import ParamValidator
 
 
 class Error(object):
+    """
+    This class represents the result of a call to the API.
+    It does not necessarily represent a failed call because this implies the result of the call itself
+    """
     def __init__(self, result: bool=None, code: str=None, message: str=None):
+        """
+
+        :param result: outcome of the result. This indicates whether we have a failed or successful result
+        :type result: bool
+        :param code: Error code.
+                     Do note this is not an integer as in many other languages when e.g. raising exceptions.
+                     This code is usually only filled when the result was False
+        :type code: str
+        :param message: Error message if any. This is usually only filled with a value if the result was False
+        :type message: str
+        """
         self.result = result
         self.code = code
         self.message = message
-        return
 
     def __repr__(self):
         return self.__dict__.__str__()
@@ -223,7 +237,7 @@ class ServiceSchema(Schema):
 
 class PaymentProfile(object):
     def __init__(self, id: int=None, name: str=None, parent_id: int=None, public: bool=False,
-                 payment_method_id: int=None, country_id: int=None, payment_tariff_id: int=None, noah_id: int=None):
+                 payment_method_id: int=None, country_id: int=None, payment_tariff_id: int=None, noa_id: int=None):
         self.id = id
         self.name = name
         self.parent_id = parent_id
@@ -231,7 +245,7 @@ class PaymentProfile(object):
         self.payment_method_id = payment_method_id
         self.country_id = country_id
         self.payment_tariff_id = payment_tariff_id
-        self.noah_id = noah_id
+        self.noa_id = noa_id
 
     def __repr__(self):
         return str(self.__dict__)
@@ -245,7 +259,7 @@ class PaymentProfileSchema(Schema):
     payment_method_id = fields.Integer()
     country_id = fields.Integer()
     payment_tariff_id = fields.Integer()
-    noah_id = fields.Integer()
+    noa_id = fields.Integer()
 
     @post_load
     def create_payment_profile(self, data):
@@ -1035,8 +1049,10 @@ class PaymentSubOptionSchema(Schema):
 
 
 class PaymentOption(PaymentOptionBase):
-    def __init__(self, payment_method_id: int=None, payment_sub_options: dict={}, *args, **kwargs):
+    def __init__(self, payment_method_id: int=None, use_only_in_store: bool=False,
+                 payment_sub_options: dict={}, *args, **kwargs):
         self.payment_method_id = payment_method_id
+        self.use_only_in_store = use_only_in_store
         self.payment_sub_options = payment_sub_options
         super().__init__(**kwargs)
 
@@ -1051,6 +1067,7 @@ class PaymentOptionSchema(Schema):
     img = fields.String(required=True)
     path = fields.String(required=True)
     state = fields.Integer(required=True)
+    use_only_in_store = fields.Boolean(required=False, allow_none=True, load_from='useOnlyInStore')
     payment_method_id = fields.Integer(allow_None=True, required=False, load_from='paymentMethodId')
     payment_sub_options = fields.List(fields.Nested(PaymentSubOptionSchema), required=False, allow_none=True,
                                       load_from='paymentOptionSubList')
@@ -1103,7 +1120,6 @@ class CountryOptionSchema(Schema):
     img = fields.String(required=True)
     path = fields.String(required=True)
     # UGH! Source is dictionary based nested?? Marshmallow/Python does not process this well!
-    # payment_option_list = fields.Dict(load_from='paymentOptionList')
     payment_option_list = fields.List(fields.Nested(PaymentOptionSchema), allow_none=True, load_from='paymentOptionList')
 
     @pre_load
