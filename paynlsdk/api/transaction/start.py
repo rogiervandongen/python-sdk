@@ -4,9 +4,38 @@ from marshmallow import Schema, fields, post_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser,\
-    ErrorSchema, TransactionStartEnduserSchema, TransactionStartInfoSchema
+from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser, ErrorSchema,\
+    TransactionStartEnduser, TransactionStartEnduserSchema, TransactionStartInfo, TransactionStartInfoSchema
 from paynlsdk.validators import ParamValidator
+
+
+class Response(ResponseBase):
+    def __init__(self,
+                 end_user: TransactionStartEnduser=None,
+                 transaction: TransactionStartInfo=None,
+                 *args, **kwargs):
+        self.end_user = end_user
+        self.transaction = transaction
+        super().__init__(**kwargs)
+
+    def get_redirect_url(self):
+        return self.transaction.payment_url
+
+    def get_payment_reference(self):
+        return self.transaction.payment_reference
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class ResponseSchema(Schema):
+    request = fields.Nested(ErrorSchema)
+    end_user = fields.Nested(TransactionStartEnduserSchema, load_from='endUser')
+    transaction = fields.Nested(TransactionStartInfoSchema)
+
+    @post_load
+    def create_response(self, data):
+        return Response(**data)
 
 
 class Request(RequestBase):
@@ -235,24 +264,18 @@ class Request(RequestBase):
         self._response, errors = schema.load(dict)
         self.handle_schema_errors(errors)
 
+    @property
+    def response(self) -> Response:
+        """
+        Return the API :class:`Response` for the validation request
 
-class Response(ResponseBase):
-    def __init__(self, end_user=None, transaction=None,
-                 *args, **kwargs):
-        self.end_user = end_user
-        self.transaction = transaction
-        super().__init__(**kwargs)
+        :return: The API response
+        :rtype: paynlsdk.api.transaction.start.Response
+        """
+        return self._response
 
-    def __repr__(self):
-        return str(self.__dict__)
-
-
-class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema)
-    end_user = fields.Nested(TransactionStartEnduserSchema, load_from='endUser')
-    transaction = fields.Nested(TransactionStartInfoSchema)
-
-    @post_load
-    def create_response(self, data):
-        return Response(**data)
+    @response.setter
+    def response(self, response: Response):
+        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
+        self._response = response
 

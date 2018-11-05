@@ -4,8 +4,124 @@ from marshmallow import Schema, fields, post_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import ErrorSchema, TransactionStatusDetailsSchema
+from paynlsdk.objects import ErrorSchema, TransactionStatusDetails, TransactionStatusDetailsSchema
 from paynlsdk.validators import ParamValidator
+
+
+class Response(ResponseBase):
+    def __init__(self,
+                 payment_details: TransactionStatusDetails=None,
+                 *args, **kwargs):
+        self.payment_details = payment_details
+        super().__init__(**kwargs)
+
+    def get_transaction_id(self):
+        """
+        Get EX-code of transaction
+        :return: EX-code of the transaction
+        :rtype: string
+        """
+        return self.payment_details.transaction_id
+
+    def get_order_id(self):
+        """
+        Get order ID of transaction
+        :return: the order ID
+        :rtype: string
+        """
+        return self.payment_details.order_id
+
+    def get_payment_profile_id(self):
+        """
+        Get payment profile ID
+        :return: payment profile ID
+        :rtype: int
+        """
+        return self.payment_details.payment_profile_id
+
+    def get_state(self):
+        """
+        Get transaction status
+        :return: transaction state
+        :rtype: int
+        """
+        return self.payment_details.state
+
+    def get_state_name(self):
+        """
+        Get transaction status name
+        :return: transaction status name
+        :rtype: string
+        """
+        return self.payment_details.state_name
+
+    def get_currency(self):
+        """
+        Get currency of transaction
+        :return: currency
+        :rtype: string
+        """
+        return self.payment_details.currency
+
+    def get_amount(self):
+        """
+        Get transaction amount in EURO
+        :return: transaction amount in EURO
+        :rtype: float
+        """
+        return self.payment_details.amount / 100
+
+    def get_currency_amount(self):
+        """
+        Get transaction amount in payment currency
+        :return: transaction amount in payment currency
+        :rtype: float
+        """
+        return self.payment_details.currency_amount / 100
+
+    def get_paid_amount(self):
+        """
+        Get paid transaction amount in EURO
+        :return: paid transaction amount in EURO
+        :rtype: float
+        """
+        return self.payment_details.paid_amount / 100
+
+    def get_paid_currency_amount(self):
+        """
+        Get paid transaction amount in payment currency
+        :return: paid transaction amount in payment currency
+        :rtype: float
+        """
+        return self.payment_details.paid_currency_amount / 100
+
+    def get_refunded_amount(self):
+        """
+        Get refunded transaction amount in EURO
+        :return: refunded transaction amount in EURO
+        :rtype: float
+        """
+        return self.payment_details.refund_amount / 100
+
+    def get_refunded_currency_amount(self):
+        """
+        Get refunded transaction amount in payment currency
+        :return: refunded transaction amount in payment currency
+        :rtype: float
+        """
+        return self.payment_details.refund_currency_amount / 100
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class ResponseSchema(Schema):
+    request = fields.Nested(ErrorSchema)
+    payment_details = fields.Nested(TransactionStatusDetailsSchema, load_from='paymentDetails')
+
+    @post_load
+    def create_response(self, data):
+        return Response(**data)
 
 
 class Request(RequestBase):
@@ -49,23 +165,18 @@ class Request(RequestBase):
         self._response, errors = schema.load(dict)
         self.handle_schema_errors(errors)
 
+    @property
+    def response(self) -> Response:
+        """
+        Return the API :class:`Response` for the validation request
 
-class Response(ResponseBase):
-    def __init__(self,
-                 payment_details=None,
-                 *args, **kwargs):
-        self.payment_details = payment_details
-        super().__init__(**kwargs)
+        :return: The API response
+        :rtype: paynlsdk.api.transaction.status.Response
+        """
+        return self._response
 
-    def __repr__(self):
-        return str(self.__dict__)
-
-
-class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema)
-    payment_details = fields.Nested(TransactionStatusDetailsSchema, load_from='paymentDetails')
-
-    @post_load
-    def create_response(self, data):
-        return Response(**data)
+    @response.setter
+    def response(self, response: Response):
+        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
+        self._response = response
 

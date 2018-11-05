@@ -1,23 +1,26 @@
 import json
 
-from marshmallow import Schema, fields, post_load, pre_load
+from marshmallow import Schema, fields, pre_load, post_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import ErrorSchema, MerchantSchema, ServiceSchema, CountryOptionSchema
+from paynlsdk.objects import ErrorSchema, Merchant, MerchantSchema, Service, ServiceSchema,\
+    PaymentOption, PaymentOptionSchema, CountryOption, CountryOptionSchema
 from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
     def __init__(self,
-                 merchant: None,
-                 service: None,
-                 settings: dict={},
-                 country_options: dict={},
+                 merchant: Merchant=None,
+                 service: Service=None,
+                 settings: dict=None,
+                 payment_options: dict=None,
+                 country_options: dict=None,
                  *args, **kwargs):
         self.merchant = merchant
         self.service = service
         self.settings = settings
+        self.payment_options = payment_options
         self.country_options = country_options
         super().__init__(**kwargs)
 
@@ -26,17 +29,24 @@ class Response(ResponseBase):
 
 
 class ResponseSchema(Schema):
-    request = fields.Nested(ErrorSchema, required=True)
-    merchant = fields.Nested(MerchantSchema, required=True)
-    service = fields.Nested(ServiceSchema, required=True)
-    settings = fields.Dict(allow_none=True, required=False)
-    country_options = fields.List(fields.Nested(CountryOptionSchema), allow_none=True, required=False, load_from='countryOptionList')
+    request = fields.Nested(ErrorSchema)
+    merchant = fields.Nested(MerchantSchema, required=False)
+    service = fields.Nested(ServiceSchema, required=False)
+    settings = fields.Dict(required=False, allow_none=True)
+    payment_options = fields.List(fields.Nested(PaymentOptionSchema), required=False, load_from='paymentOptions')
+    country_options = fields.List(fields.Nested(CountryOptionSchema), required=False, load_from='countryOptionList')
+    #payment_profiles = fields.List(fields.Nested(PaymentOptionSchema), required=False, load_from='paymentProfiles')
 
     @pre_load
-    def preprocess(self, data):
-        # Fix EMPTY settings
-        if ParamValidator.is_empty(data['settings']):
-            del data['settings']
+    def pre_processor(self, data):
+        if ParamValidator.is_empty(data['paymentOptions']):
+            del data['paymentOptions']
+        elif 'paymentOptions' in data and ParamValidator.not_empty(data['paymentOptions']):
+            #  v2.x has NO fields.Dict implementation like fields.List, so we'll have to handle this ourselves
+            list = []
+            for i, item in data['paymentOptions'].items():
+                list.append(item)
+            data['paymentOptions'] = list
         if ParamValidator.is_empty(data['countryOptionList']):
             del data['countryOptionList']
         elif 'countryOptionList' in data and ParamValidator.not_empty(data['countryOptionList']):
@@ -51,6 +61,11 @@ class ResponseSchema(Schema):
     def create_response(self, data):
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo preprocessing).
         #  This should be fixed in 3.x but that's a pre-release
+        if 'payment_options' in data:
+            dict = {}
+            for item in data['payment_options']:
+                dict[item.id] = item
+            data['payment_options'] = dict
         if 'country_options' in data:
             dict = {}
             for item in data['country_options']:
@@ -77,7 +92,7 @@ class Request(RequestBase):
         return 'Transaction'
 
     def get_method(self):
-        return 'getService'
+        return 'getServicePaymentOptions'
 
     def get_query_string(self):
         return ''
@@ -85,7 +100,7 @@ class Request(RequestBase):
     def get_parameters(self):
         # Get default api parameters
         dict = self.get_std_parameters()
-        # Add payment_method_id if set
+        # Add own parameters
         if ParamValidator.not_empty(self.payment_method_id):
             dict['paymentMethodId'] = self.payment_method_id
         return dict
@@ -105,7 +120,7 @@ class Request(RequestBase):
         Return the API :class:`Response` for the validation request
 
         :return: The API response
-        :rtype: paynlsdk.api.transaction.getservice.Response
+        :rtype: paynlsdk.api.transaction.getservicepaymentoptions.Response
         """
         return self._response
 
@@ -113,7 +128,4 @@ class Request(RequestBase):
     def response(self, response: Response):
         # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
         self._response = response
-
-    def __repr__(self):
-        return self.__dict__.__str__()
 

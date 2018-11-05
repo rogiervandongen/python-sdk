@@ -37,17 +37,10 @@ class RequestBase(ABC):
     def raw_response(self):
         return self._raw_response
 
-    @raw_response.setter
-    def raw_response(self, raw_response: str):
-        self._raw_response = raw_response
-
     @property
-    def response(self):
-        return self._response
-
-    @response.setter
-    def response(self, response: str):
-        self._response = response
+    @abstractmethod
+    def response(self) -> ResponseBase:
+        pass
 
     @abstractmethod
     def requires_api_token(self):
