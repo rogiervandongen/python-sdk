@@ -172,11 +172,47 @@ class ServiceCategorySchema(Schema):
         return ServiceCategory(**data)
 
 
+class OrderData(object):
+    def __init__(self,
+                 product_id=None,
+                 description=None,
+                 price=None,
+                 quantity=None,
+                 vat_code=None,
+                 vat_percentage=None,
+                 product_type=None,
+                 ):
+        self.product_id = product_id
+        self.description = description
+        self.price = price
+        self.quantity = quantity
+        self.vat_code = vat_code
+        self.vat_percentage = vat_percentage
+        self.product_type = product_type
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class OrderDataSchema(Schema):
+    product_id = fields.String(load_from='productId')
+    description = fields.String(required=False)
+    price = fields.Integer()
+    quantity = fields.Integer()
+    vat_code = fields.String(load_from='vatCode')  # Enum:VAT
+    vat_percentage = fields.String(load_from='vatPercentage', required=False, allow_none=True)
+    product_type = fields.String(load_from='productType', required=False)  # Enum:productType
+
+    @post_load
+    def create_order_data(self, data):
+        return OrderData(**data)
+
+
 class SalesData(object):
-    def __init__(self, invoice_date: datetime=None, delivery_date: datetime=None, order_data=None):
+    def __init__(self, invoice_date: datetime=None, delivery_date: datetime=None, order_data: List[OrderData]=[]):
         self.invoice_date = invoice_date
         self.delivery_date = delivery_date
-        self.order_data = order_data  # TODO: is a LIST
+        self.order_data: List[OrderData] = order_data  # TODO: is a LIST
 
     def __repr__(self):
         return str(self.__dict__)
@@ -185,7 +221,7 @@ class SalesData(object):
 class SalesDataSchema(Schema):
     invoice_date = fields.DateTime(format='%d-%m-%Y', load_from='invoiceDate')
     delivery_date = fields.String(format='%d-%m-%Y', load_from='deliveryDate')
-    order_data = fields.String(load_from='orderData')  # TODO: List<OrderData>
+    order_data = fields.List(fields.Nested(OrderDataSchema), load_from='orderData')  # List is ASSUMNED! Could be DICT
 
     @post_load
     def create_sales_data(self, data):
@@ -444,6 +480,10 @@ class TransactionStartEnduser(object):
 class TransactionStartEnduserSchema(Schema):
     blacklist = fields.Integer()  # TODO: Enum type Blacklist
 
+    @post_load
+    def create_transaction_end_user(self, data):
+        return TransactionStartEnduser(**data)
+
 
 class TransactionData(object):
     def __init__(self, currency=None, costs_vat=None, order_exchange_url=None, description=None, expire_date: datetime=None,
@@ -599,42 +639,6 @@ class StatsDetailsSchema(Schema):
         return StatsDetails(**data)
 
 
-class OrderData(object):
-    def __init__(self,
-                 product_id=None,
-                 description=None,
-                 price=None,
-                 quantity=None,
-                 vat_code=None,
-                 vat_percentage=None,
-                 product_type=None,
-                 ):
-        self.product_id = product_id
-        self.description = description
-        self.price = price
-        self.quantity = quantity
-        self.vat_code = vat_code
-        self.vat_percentage = vat_percentage
-        self.product_type = product_type
-
-    def __repr__(self):
-        return str(self.__dict__)
-
-
-class OrderDataSchema(Schema):
-    product_id = fields.String(load_from='productId')
-    description = fields.String(required=False)
-    price = fields.Integer()
-    quantity = fields.Integer()
-    vat_code = fields.String(load_from='vatCode')  # Enum:VAT
-    vat_percentage = fields.String(load_from='vatPercentage', required=False, allow_none=True)
-    product_type = fields.String(load_from='productType', required=False)  # Enum:productType
-
-    @post_load
-    def create_order_data(self, data):
-        return OrderData(**data)
-
-
 class PaymentDetails(object):
     def __init__(self,
                  amount=None,
@@ -769,20 +773,21 @@ class EndUserBase(object):
         self.iban = iban
         self.bic = bic
         self.send_confirm_email = send_confirm_email
-        self.company = company
-        self.address = address
-        self.invoice_address = invoice_address
+        self.company: Company = company
+        self.address: Address = address
+        self.invoice_address: Address = invoice_address
 
     def __repr__(self):
         return str(self.__dict__)
 
 
 class EndUser(EndUserBase):
-    def __init__(self, payment_details=None, storno_details=None, stats_details=None,
+    def __init__(self, payment_details: PaymentDetails=None, storno_details: StornoDetails=None,
+                 stats_details: StatsDetails=None,
                  *args, **kwargs):
-        self.payment_details = payment_details
-        self.storno_details = storno_details
-        self.stats_details = stats_details
+        self.payment_details: PaymentDetails = payment_details
+        self.storno_details: StornoDetails = storno_details
+        self.stats_details: StatsDetails = stats_details
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -1038,7 +1043,7 @@ class SalesData(object):
     def __init__(self,
                  invoice_date: datetime=None,
                  delivery_date: datetime=None,
-                 order_data: list=[],
+                 order_data: List=[OrderData],
                  ):
         self.invoice_date = invoice_date
         self.delivery_date = delivery_date
@@ -1112,7 +1117,7 @@ class PaymentOption(PaymentOptionBase):
                  payment_sub_options: Dict[int, PaymentSubOption]={}, *args, **kwargs):
         self.payment_method_id = payment_method_id
         self.use_only_in_store = use_only_in_store
-        self.payment_sub_options = payment_sub_options
+        self.payment_sub_options: Dict[int, PaymentSubOption] = payment_sub_options
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -1165,7 +1170,7 @@ class CountryOption(object):
         self.in_eu = in_eu
         self.img = img
         self.path = path
-        self.payment_option_list = payment_option_list  # TODO: is a LIST
+        self.payment_option_list: Dict[int, PaymentOption] = payment_option_list
 
     def __repr__(self):
         return str(self.__dict__)
