@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import List
+
 from marshmallow import Schema, fields, post_load, pre_load
 from paynlsdk.validators import ParamValidator
 
@@ -266,6 +268,63 @@ class PaymentProfileSchema(Schema):
         return PaymentProfile(**data)
 
 
+class CountryId(object):
+    def __init__(self, id: str=None, name: str=None):
+        self.id: str = id
+        self.name: str = name
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class CountryIdSchema(Schema):
+    id = fields.String()
+    name = fields.String()
+
+    @post_load
+    def create_country(self, data):
+        return CountryId(**data)
+
+
+class ServicePaymentProfile(object):
+    def __init__(self, id: int=None, name: str=None, visible_name: str=None,
+                 costs_fixed: int=0, costs_percentage: float=0, countries: List[CountryId]=None):
+        self.id = id
+        self.name = name
+        self.visible_name = visible_name
+        self.costs_fixed: int = costs_fixed
+        self.costs_percentage: float = costs_percentage
+        self.countries: List[CountryId] = countries
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class ServicePaymentProfileSchema(Schema):
+    id = fields.Integer()
+    name = fields.String()
+    visible_name = fields.String(load_from='visibleName')
+    costs_fixed = fields.Integer(load_from='costsFixed')
+    costs_percentage = fields.Float(load_from='costsPercentage')
+    countries = fields.List(fields.Nested(CountryIdSchema))
+
+    @pre_load
+    def pre_processor(self, data):
+        if ParamValidator.is_empty(data['countries']):
+            del data['countries']
+        elif 'countries' in data and ParamValidator.not_empty(data['countries']):
+            #  Undo the key-mapping in the source
+            list = []
+            for i, item in data['countries'].items():
+                list.append(item)
+            data['countries'] = list
+        return data
+
+    @post_load
+    def create_service_payment_profile(self, data):
+        return ServicePaymentProfile(**data)
+
+
 class RefundInfo(object):
     def __init__(self, payment_session_id: int=None, amount: int=None, description: str=None,
                  bank_account_holder: str=None, bank_account_number: str=None, bank_account_bic: str=None,
@@ -313,10 +372,10 @@ class TransactionStartInfo(object):
 
 
 class TransactionStartInfoSchema(Schema):
-    transaction_id = fields.String(load_from='transactionId')
-    payment_url = fields.Url(load_from='paymentURL')
-    popup_allowed = fields.Boolean(load_from='popupAllowed')
-    payment_reference = fields.String(load_from='paymentReference')
+    transaction_id = fields.String(load_from='transactionId', required=False, allow_none=True)
+    payment_url = fields.Url(load_from='paymentURL', required=False, allow_none=True)
+    popup_allowed = fields.Boolean(load_from='popupAllowed', required=False, allow_none=True)
+    payment_reference = fields.String(load_from='paymentReference', required=False, allow_none=True)
 
     @post_load
     def create_transaction_start_info(self, data):
@@ -653,17 +712,17 @@ class PaymentDetails(object):
 class PaymentDetailsSchema(Schema):
     amount = fields.Integer()
     currency_amount = fields.Integer(load_from='currencyAmount')
-    paid_amount = fields.String(load_from='paidAmount')
-    paid_currency_amount = fields.String(load_from='paidCurrencyAmount')
-    paid_base = fields.String(load_from='paidBase')
-    paid_costs = fields.String(load_from='paidCosts')
+    paid_amount = fields.Integer(load_from='paidAmount')  # Incorrectly specified in API (should be int, not string)
+    paid_currency_amount = fields.Integer(load_from='paidCurrencyAmount')  # Incorrectly specified in API (should be int, not string)
+    paid_base = fields.Integer(load_from='paidBase')  # Incorrectly specified in API (should be int, not string)
+    paid_costs = fields.Integer(load_from='paidCosts')  # Incorrectly specified in API (should be int, not string)
     paid_costs_vat = fields.String(load_from='paidCostsVat')
     paid_currency = fields.String(load_from='paidCurrency')
-    paid_attempts = fields.Integer(load_from='paidAttempts')
-    paid_duration = fields.String(load_from='paidDuration')
+    paid_attempts = fields.Integer(load_from='paidAttempts')  # Incorrectly specified in API (should be int, not string)
+    paid_duration = fields.String(load_from='paidDuration')  # Incorrectly specified in API (can't be string, can it?)
     description = fields.String()
     process_time = fields.String(load_from='processTime')
-    state = fields.String(load_from='state')  #Enum,:paymentstatus
+    state = fields.Integer(load_from='state')  #Enum,:paymentstatus
     state_name = fields.String(load_from='stateName')
     state_description = fields.String(load_from='stateDescription')
     exchange = fields.String()
@@ -678,9 +737,9 @@ class PaymentDetailsSchema(Schema):
     service_id = fields.String(load_from='serviceId')
     service_name = fields.String(load_from='serviceName')
     service_description = fields.String(load_from='serviceDescription')
-    created = fields.DateTime(format='%Y-%m-%d %H:%M:%S', allow_none=True)  # YMDHIS?
-    modified = fields.DateTime(format='%Y-%m-%d %H:%M:%S', allow_none=True)  # YMDHIS?
-    payment_method_id = fields.String(load_from='paymentMethodId')
+    created = fields.DateTime(format='%Y-%m-%d %H:%M:%S', allow_none=True)
+    modified = fields.DateTime(format='%Y-%m-%d %H:%M:%S', allow_none=True)
+    payment_method_id = fields.String(load_from='paymentMethodId')  # Incorrectly specified in API (should be Int)?
     payment_method_name = fields.String(load_from='paymentMethodName')
     payment_method_description = fields.String(load_from='paymentMethodDescription')
     payment_profile_name = fields.String(load_from='paymentProfileName')
@@ -1050,7 +1109,7 @@ class PaymentSubOptionSchema(Schema):
 
 class PaymentOption(PaymentOptionBase):
     def __init__(self, payment_method_id: int=None, use_only_in_store: bool=False,
-                 payment_sub_options: dict={}, *args, **kwargs):
+                 payment_sub_options: Dict[int, PaymentSubOption]={}, *args, **kwargs):
         self.payment_method_id = payment_method_id
         self.use_only_in_store = use_only_in_store
         self.payment_sub_options = payment_sub_options
@@ -1090,16 +1149,16 @@ class PaymentOptionSchema(Schema):
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo pre_processing).
         #  This should be fixed in 3.x but that's a pre-release
         if 'payment_sub_options' in data:
-            dict = {}
+            rs = {}
             for item in data['payment_sub_options']:
-                dict[item.id] = item
-            data['payment_sub_options'] = dict
+                rs[item.id] = item
+            data['payment_sub_options'] = rs
         return PaymentOption(**data)
 
 
 class CountryOption(object):
     def __init__(self, id: int=None, name: str=None, visible_name: str=None, in_eu: bool=False,
-                 img: str=None, path: str=None, payment_option_list: dict={}):
+                 img: str=None, path: str=None, payment_option_list: Dict[int, PaymentOption]={}):
         self.id = id
         self.name = name
         self.visible_name = visible_name
@@ -1138,9 +1197,9 @@ class CountryOptionSchema(Schema):
     def create_country_option(self, data):
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo pre_processing).
         #  This should be fixed in 3.x but that's a pre-release
-        dict = {}
+        rs = {}
         for item in data['payment_option_list']:
-            dict[item.id] = item
-        data['payment_option_list'] = dict
+            rs[item.id] = item
+        data['payment_option_list'] = rs
         return CountryOption(**data)
 

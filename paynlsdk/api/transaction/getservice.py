@@ -1,24 +1,26 @@
 import json
+from typing import Dict
 
 from marshmallow import Schema, fields, post_load, pre_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import ErrorSchema, MerchantSchema, ServiceSchema, CountryOptionSchema
+from paynlsdk.objects import ErrorSchema, Merchant, MerchantSchema, Service, ServiceSchema,\
+    CountryOption, CountryOptionSchema
 from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
     def __init__(self,
-                 merchant: None,
-                 service: None,
+                 merchant: Merchant = None,
+                 service: Service = None,
                  settings: dict={},
-                 country_options: dict={},
+                 country_options: Dict[str, CountryOption]={},
                  *args, **kwargs):
-        self.merchant = merchant
-        self.service = service
-        self.settings = settings
-        self.country_options = country_options
+        self.merchant: Merchant = merchant
+        self.service: Service = service
+        self.settings: dict = settings
+        self.country_options: Dict[str, CountryOption] = country_options
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -52,10 +54,10 @@ class ResponseSchema(Schema):
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo preprocessing).
         #  This should be fixed in 3.x but that's a pre-release
         if 'country_options' in data:
-            dict = {}
+            rs = {}
             for item in data['country_options']:
-                dict[item.id] = item
-            data['country_options'] = dict
+                rs[item.id] = item
+            data['country_options'] = rs
         return Response(**data)
 
 
@@ -84,19 +86,19 @@ class Request(RequestBase):
 
     def get_parameters(self):
         # Get default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         # Add payment_method_id if set
         if ParamValidator.not_empty(self.payment_method_id):
-            dict['paymentMethodId'] = self.payment_method_id
-        return dict
+            rs['paymentMethodId'] = self.payment_method_id
+        return rs
 
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
         # Do error checking.
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(dict)
+        self._response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
 
     @property
@@ -111,7 +113,6 @@ class Request(RequestBase):
 
     @response.setter
     def response(self, response: Response):
-        # print('{}::respone.setter'.format(self.__module__ + '.' + self.__class__.__qualname__))
         self._response = response
 
     def __repr__(self):

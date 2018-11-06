@@ -8,6 +8,7 @@ from paynlsdk.objects import ErrorSchema, Connection, ConnectionSchema, EndUser,
     PaymentDetails, PaymentDetailsSchema, StornoDetails, StornoDetailsSchema,\
     SalesData, SalesDataSchema, StatsDetails, StatsDetailsSchema
 from paynlsdk.validators import ParamValidator
+from paynlsdk.exceptions import TransactionStatusException, TransactionNotAuthorizedException
 
 
 class Response(ResponseBase):
@@ -20,31 +21,77 @@ class Response(ResponseBase):
                  stats_details: StatsDetails=None,
                  transaction_id: str=None,
                  *args, **kwargs):
-        self.connection = connection
-        self.enduser = enduser
-        self.sale_data = sale_data
-        self.payment_details = payment_details
-        self.storno_details = storno_details
-        self.stats_details = stats_details
+        self.connection: Connection = connection
+        self.enduser: EndUser = enduser
+        self.sale_data: SalesData = sale_data
+        self.payment_details: PaymentDetails = payment_details
+        self.storno_details: StornoDetails = storno_details
+        self.stats_details: StatsDetails = stats_details
         self.transaction_id = transaction_id
         super().__init__(**kwargs)
 
-    def is_paid(self):
+    def get_status(self):
+        """
+        Get transaction status
+        :return: Response object if transaction.status API
+        :rtype: paynlsdk.api.transaction.status.Response
+        """
+        from paynlsdk.api.transaction.status import Request
+        from paynlsdk.api.client import APIClient
+        client = APIClient()
+        request = Request(self.transaction_id)
+        client.perform_request(request)
+        return request.response
+
+    def is_paid(self) -> bool:
+        """
+        Check if the transaction has been PAID
+        :return: True of transaction is PAID, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state_name == 'PAID'
 
-    def is_pending(self):
+    def is_pending(self) -> bool:
+        """
+        Check if the transaction is in PENDING state
+        :return: True of transaction is PENDING, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state_name == 'PENDING' or self.payment_details.state_name == 'VERIFY'
 
-    def is_cancelled(self):
+    def is_cancelled(self) -> bool:
+        """
+        Check if the transaction has been CANCELLED
+        :return: True of transaction is CANCELLED, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state <= 0
 
-    def is_authorized(self):
+    def is_authorized(self) -> bool:
+        """
+        Check if the transaction has been AUTHORIZED
+        :return: True of transaction is AUTHORIZED, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state == 95
 
-    def is_being_verified(self):
+    def is_being_verified(self) -> bool:
+        """
+        Check if the transaction has been VERIFIED
+        :return: True of transaction is VERIFIED, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state_name == 'VERIFY'
 
-    def is_refunded(self, allow_partial_refunds: bool = True):
+    def is_refunded(self, allow_partial_refunds: bool = True) -> bool:
+        """
+        Check if the transaction has been (partially) REFUNDED
+
+        :param allow_partial_refunds: True to allow checking for partial refunds
+        :type allow_partial_refunds: bool
+        :return: True of transaction is (partially) REFUNDED, False otherwise
+        :rtype: bool
+        """
         if self.payment_details.state_name == 'REFUND':
             return True
         elif allow_partial_refunds and self.payment_details.state_name == 'PARTIAL_REFUND':
@@ -52,23 +99,23 @@ class Response(ResponseBase):
         else:
             return False
 
-    def is_partially_refunded(self):
+    def is_partially_refunded(self) -> bool:
+        """
+        Check if the transaction has been partially REFUNDED
+
+        :return: True of transaction is partially REFUNDED, False otherwise
+        :rtype: bool
+        """
         return self.payment_details.state_name == 'PARTIAL_REFUND'
 
-    def get_id(self):
+    def get_id(self) -> str:
+        """
+        Get transaction ID
+
+        :return: transaction ID
+        :rtype: str
+        """
         return self.transaction_id
-
-    def approve(self):
-        raise NotImplementedError("TODO")
-
-    def decline(self):
-        raise NotImplementedError("TODO")
-
-    def void(self):
-        raise NotImplementedError("TODO")
-
-    def capture(self):
-        raise NotImplementedError("TODO")
 
     def get_amount(self):
         """
@@ -116,8 +163,7 @@ class Response(ResponseBase):
         :return: refunded transaction amount in EURO
         :rtype: float
         """
-        # return self.payment_details.refund_amount / 100
-        raise NotImplementedError("TODO")
+        self._get_status().get_refunded_amount()
 
     def get_refunded_currency_amount(self):
         """
@@ -125,8 +171,7 @@ class Response(ResponseBase):
         :return: refunded transaction amount in payment currency
         :rtype: float
         """
-        # return self.payment_details.refund_currency_amount / 100
-        raise NotImplementedError("TODO")
+        self._get_status().get_refunded_currency_amount()
 
     def get_account_holder_name(self):
         """
@@ -192,6 +237,76 @@ class Response(ResponseBase):
         """
         return self.stats_details.extra3
 
+    def approve(self) -> bool:
+        """
+        Approve transaction that needs verification
+
+        :return: Result of the approval: True is successful
+        :rtype:  bool
+        :raise: TransactionStatusException if not current status is not VERIFY
+        """
+        if not self.is_being_verified():
+            raise TransactionStatusException('Cannot decline transaction because it does not have the status VERIFY')
+        from paynlsdk.api.transaction.approve import Request
+        from paynlsdk.api.client import APIClient
+        client = APIClient()
+        request = Request(self.transaction_id)
+        client.perform_request(request)
+        return request.response.result
+
+    def decline(self) -> bool:
+        """
+        Decline transaction that needs verification
+
+        :return: Result of the decline: True is successful
+        :rtype:  bool
+        :raise: TransactionStatusException if not current status is not VERIFY
+        """
+        if not self.is_being_verified():
+            raise TransactionStatusException('Cannot decline transaction because it does not have the status VERIFY')
+        from paynlsdk.api.transaction.decline import Request
+        from paynlsdk.api.client import APIClient
+        client = APIClient()
+        request = Request(self.transaction_id)
+        client.perform_request(request)
+        return request.response.result
+
+    def void(self) -> bool:
+        """
+        Void authorized transaction
+
+        :return: Result of the void: True is successful
+        :rtype:  bool
+        :raise: TransactionNotAuthorizedException if not yet authorized
+        """
+        if not self.is_authorized():
+            raise TransactionNotAuthorizedException('Cannot capture transaction, status is not authorized')
+        # We will NOT use the "utility" methds here but the full API implementation
+        from paynlsdk.api.transaction.voidauthorization import Request
+        from paynlsdk.api.client import APIClient
+        client = APIClient()
+        request = Request(self.transaction_id)
+        client.perform_request(request)
+        return request.response.result
+
+    def capture(self) -> bool:
+        """
+        Capture authorized transaction
+
+        :return: Result of the capture: True is successful
+        :rtype:  bool
+        :raise: TransactionNotAuthorizedException if not yet authorized
+        """
+        if not self.is_authorized():
+            raise TransactionNotAuthorizedException('Cannot capture transaction, status is not authorized')
+        # We will NOT use the "utility" methds here but the full API implementation
+        from paynlsdk.api.transaction.capture import Request
+        from paynlsdk.api.client import APIClient
+        client = APIClient()
+        request = Request(self.transaction_id)
+        client.perform_request(request)
+        return request.response.result
+
     def __repr__(self):
         return str(self.__dict__)
 
@@ -243,19 +358,19 @@ class Request(RequestBase):
         # Validation
         ParamValidator.assert_not_empty(self.transaction_id, 'transaction_id')
         # Get default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         # Add own parameters
-        dict['transactionId'] = self.transaction_id
+        rs['transactionId'] = self.transaction_id
         if ParamValidator.not_empty(self.entrance_code):
-            dict['entranceCode'] = self.entrance_code
-        return dict
+            rs['entranceCode'] = self.entrance_code
+        return rs
 
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(dict)
+        self._response, errors = schema.load(rs)
         #  Map transaction ID on response
         self.response.transaction_id = self.transaction_id
         self.handle_schema_errors(errors)

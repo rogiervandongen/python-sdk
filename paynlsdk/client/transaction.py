@@ -1,5 +1,7 @@
 from paynlsdk.api.client import APIClient
-from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser
+from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser, BankDetails
+
+from typing import List
 
 
 class Transaction(object):
@@ -65,18 +67,18 @@ class Transaction(object):
         return response.result
 
     @staticmethod
-    def get_banks():
+    def get_banks() -> List[BankDetails]:
         """
         Gets the list of banks.
 
         :return: List of banks
-        :rtype: list
+        :rtype: List[BankDetails]
         """
         from paynlsdk.api.transaction.getbanks import Request
         client = APIClient()
         request = Request()
         client.perform_request(request)
-        return request.response
+        return request.response.banks
 
     @staticmethod
     def get_service(payment_method_id: int):

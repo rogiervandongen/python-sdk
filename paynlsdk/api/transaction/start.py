@@ -1,6 +1,6 @@
 import json
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, pre_load, post_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
@@ -14,8 +14,8 @@ class Response(ResponseBase):
                  end_user: TransactionStartEnduser=None,
                  transaction: TransactionStartInfo=None,
                  *args, **kwargs):
-        self.end_user = end_user
-        self.transaction = transaction
+        self.end_user: TransactionStartEnduser = end_user
+        self.transaction: TransactionStartInfo = transaction
         super().__init__(**kwargs)
 
     def get_redirect_url(self):
@@ -30,8 +30,17 @@ class Response(ResponseBase):
 
 class ResponseSchema(Schema):
     request = fields.Nested(ErrorSchema)
-    end_user = fields.Nested(TransactionStartEnduserSchema, load_from='endUser')
-    transaction = fields.Nested(TransactionStartInfoSchema)
+    end_user = fields.Nested(TransactionStartEnduserSchema, required=False, allow_none=True, load_from='endUser')
+    transaction = fields.Nested(TransactionStartInfoSchema, required=False, allow_none=True)
+
+    @pre_load
+    def pre_processor(self, data):
+        # Again, the API could return an empty string where it SHOULD return null or an empty object.
+        if ParamValidator.is_empty(data['endUser']):
+            del data['endUser']
+        if ParamValidator.is_empty(data['transaction']):
+            del data['transaction']
+        return data
 
     @post_load
     def create_response(self, data):
@@ -58,10 +67,10 @@ class Request(RequestBase):
         self.finish_url = finish_url
         self.payment_option_id = payment_option_id
         self.payment_option_sub_id = payment_option_sub_id
-        self.transaction = transaction
-        self.stats_data = stats_data
-        self.end_user = end_user
-        self.sale_data = sale_data
+        self.transaction: TransactionData = transaction
+        self.stats_data: TransactionStartStatsData = stats_data
+        self.end_user: TransactionEndUser = end_user
+        self.sale_data: SalesData = sale_data
         self.test_mode = test_mode
         self.transfer_type = transfer_type
         self.transfer_value = transfer_value
@@ -94,29 +103,29 @@ class Request(RequestBase):
                                                               or self.transfer_type == 'merchant'):
             raise ValueError('TransferValue cannot be set without valid TransferType, please fix this.')
         # Default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         #  Append our own parameters
-        dict['amount'] = self.amount
-        dict['ipAddress'] = self.ip_address
-        dict['finishUrl'] = self.finish_url
+        rs['amount'] = self.amount
+        rs['ipAddress'] = self.ip_address
+        rs['finishUrl'] = self.finish_url
         if ParamValidator.not_empty(self.payment_option_id):
-            dict['paymentOptionId'] = self.payment_option_id
+            rs['paymentOptionId'] = self.payment_option_id
         if ParamValidator.not_empty(self.payment_option_sub_id):
-            dict['paymentOptionSubId'] = self.payment_option_sub_id
+            rs['paymentOptionSubId'] = self.payment_option_sub_id
         if self.test_mode:
-            dict['testMode'] = 1
+            rs['testMode'] = 1
         else:
-            dict['testMode'] = 0
+            rs['testMode'] = 0
         if ParamValidator.not_empty(self.transfer_type):
-            dict['transferType'] = self.transfer_type
+            rs['transferType'] = self.transfer_type
         if ParamValidator.not_empty(self.transfer_value):
-            dict['transferValue'] = self.transfer_value
+            rs['transferValue'] = self.transfer_value
         # Now handle complex types
-        self._merge_transaction_dict(dict)
-        self._merge_stats_data_dict(dict)
-        self._merge_sales_data_dict(dict)
-        self._merge_end_user_dict(dict)
-        return dict
+        self._merge_transaction_dict(rs)
+        self._merge_stats_data_dict(rs)
+        self._merge_sales_data_dict(rs)
+        self._merge_end_user_dict(rs)
+        return rs
 
     def _merge_transaction_dict(self, innerdict):
         if ParamValidator.is_null(self.transaction):
@@ -259,9 +268,9 @@ class Request(RequestBase):
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(dict)
+        self._response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
 
     @property
