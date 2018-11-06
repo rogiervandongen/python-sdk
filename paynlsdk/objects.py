@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from marshmallow import Schema, fields, post_load, pre_load
 from paynlsdk.validators import ParamValidator
