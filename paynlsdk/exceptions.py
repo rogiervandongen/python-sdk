@@ -15,10 +15,10 @@ class SchemaException(Exception):
 
 class TransactionNotAuthorizedException(Exception):
     def __init__(self, message):
-      super(SchemaException, self).__init__(message)
+      super(TransactionNotAuthorizedException, self).__init__(message)
 
 
 class TransactionStatusException(Exception):
     def __init__(self, message):
-        super(SchemaException, self).__init__(message)
+        super(TransactionStatusException, self).__init__(message)
 

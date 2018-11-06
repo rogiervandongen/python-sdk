@@ -7,14 +7,23 @@ from paynlsdk.exceptions import ErrorException
 from paynlsdk.validators import ParamValidator
 
 PAYNL_END_POINT = "https://rest-api.pay.nl"
-PAYNL_CLIENT_VERSION = "0.0.1"
+PAYNL_CLIENT_VERSION = "0.0.3"
 
 
 class APIAuthentication(object):
-    api_token = None
-    service_id = None
-    token_code = None
-    use_http_auth = True
+    """
+    API Authentication details
+
+    :cvar str api_token: API token
+    :cvar str service_id: service ID in the form of SL-xxxx-xxxx
+    :cvar str token_code: service ID in the form of AT-xxxx-xxxx
+    :cvar bool use_http_auth: whether we use basic HTTP authentication or not.
+                               You should never really change this: Basic HTTP auth should be used by default!
+    """
+    api_token: str = None
+    service_id: str = None
+    token_code: str = None
+    use_http_auth: bool = True
 
 
 class APIClient(object):
@@ -28,6 +37,13 @@ class APIClient(object):
         self.service_id = None
 
     def get_auth(self, as_string: bool=True):
+        """
+        Get Basic HTTP auth string to use in header
+        :param as_string: whether to return as string. If False, returns bytes
+        :type as_string: bool
+        :return: generated auth
+        :rtype: str
+        """
         enc = base64.b64encode('{}:{}'.format(APIAuthentication.token_code, APIAuthentication.api_token).encode())
         if as_string:
             return enc.decode()
@@ -35,6 +51,11 @@ class APIClient(object):
             return enc
 
     def user_agent(self):
+        """
+        Get user agent string (will be used when calling the API)
+        :return: API user agent
+        :rtype: str
+        """
         version = '{0}.{1}.{2}'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
         return "PAYNL/SDK/{0} Python/{1} ({2})".format(self.client_version, version, sys.hexversion)
 
@@ -42,6 +63,30 @@ class APIClient(object):
                         request: RequestBase,
                         method: str='POST'
                         ):
+        """
+        Performs the actual call to the API and fill the responses.
+
+        This method will basically verify the given :class:`paynlsdk.api.requestbase.RequestBase` class,
+        perform the call to the API, interpret the result and fill the request's
+        :ivar:`paynlsdk.api.requestbase.RequestBase.response`.
+        Interpreting the result is done by evaluating the returned JSON using marshmallow.
+        When validation is complete, the request class will internally set the response, which is always an instance
+        of a :class:`paynlsdk.api.responsebase.ResponseBase` instance
+
+        .. seealso::
+            :class:`paynlsdk.api.requestbase.RequestBase` and all it's derived classes
+
+            :class:`paynlsdk.api.responsebase.ResponseBase` and all it's derived classes
+
+        :param request: the generic request to perform
+        :type request: paynlsdk.api.requestbase.RequestBase
+        :param method: HTTP method (stick to POST!)
+        :type method: str
+        :return: void
+        :rtype: void
+        :raise paynlsdk.exceptions.ErrorException: generic error occurred
+        :raise paynlsdk.exceptions.SchemaException: error occurred during result parsing (schema load/validation failure)
+        """
         headers = {
           'Accept': 'application/json',
           'User-Agent': self.user_agent()
