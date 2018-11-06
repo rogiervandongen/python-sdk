@@ -56,22 +56,22 @@ class Request(RequestBase):
         # Validation
         ParamValidator.assert_not_empty(self.transaction_id, 'transaction_id')
         # Get default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         # Add own parameters
-        dict['transactionId'] = self.transaction_id
+        rs['transactionId'] = self.transaction_id
         if self.products.__len__() > 0:
-            dict['products'] = self.products
+            rs['products'] = self.products
         if ParamValidator.not_empty(self.tracktrace):
-            dict['tracktrace'] = self.tracktrace
-        return dict
+            rs['tracktrace'] = self.tracktrace
+        return rs
 
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
         # Do error checking.
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(dict)
+        self._response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
 
     @property

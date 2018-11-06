@@ -13,7 +13,7 @@ PAYNL_CLIENT_VERSION = "0.0.1"
 class APIAuthentication(object):
     api_token = None
     service_id = None
-    at_token = None
+    token_code = None
     use_http_auth = True
 
 
@@ -28,7 +28,7 @@ class APIClient(object):
         self.service_id = None
 
     def get_auth(self, as_string: bool=True):
-        enc = base64.b64encode('{}:{}'.format(APIAuthentication.at_token, APIAuthentication.api_token).encode())
+        enc = base64.b64encode('{}:{}'.format(APIAuthentication.token_code, APIAuthentication.api_token).encode())
         if as_string:
             return enc.decode()
         else:

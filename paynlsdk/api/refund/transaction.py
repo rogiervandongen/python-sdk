@@ -10,8 +10,8 @@ from paynlsdk.validators import ParamValidator
 
 class Response(ResponseBase):
     def __init__(self,
-                 refunded_transactions: dict={},
-                 failed_transactions: dict={},
+                 refunded_transactions: dict={},  # Should probably be typehinted with Dict[str, RefundSuccessInfoSchema]
+                 failed_transactions: dict={},  # Should probably be typehinted with Dict[str, RefundFailInfoSchema]
                  amount_refunded: int=None,
                  description: str=None,
                  *args, **kwargs):
@@ -67,18 +67,18 @@ class ResponseSchema(Schema):
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo preprocessing).
         #  This should be fixed in 3.x but that's a pre-release
         if 'refunded_transactions' in data:
-            dict = {}
+            rs = {}
             for item in data['refunded_transactions']:
                 print(item)
-                dict[item.order_id] = item
-            data['refunded_transactions'] = dict
+                rs[item.order_id] = item
+            data['refunded_transactions'] = rs
         #  This is NASTY. Perform conversion due to fields.Dict NOT taking nesteds in 2.x (aka undo preprocessing).
         #  This should be fixed in 3.x but that's a pre-release
         if 'failed_transactions' in data:
-            dict = {}
+            rs = {}
             for item in data['failed_transactions']:
-                dict[item.order_id] = item
-            data['failed_transactions'] = dict
+                rs[item.order_id] = item
+            data['failed_transactions'] = rs
         return Response(**data)
 
 
@@ -123,30 +123,30 @@ class Request(RequestBase):
         # Validation
         ParamValidator.assert_not_empty(self.transaction_id, 'transaction_id')
         # Get default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         # Add own parameters
-        dict['transactionId'] = self.transaction_id
+        rs['transactionId'] = self.transaction_id
         if ParamValidator.not_empty(self.amount):
-            dict['amount'] = self.amount
+            rs['amount'] = self.amount
         if ParamValidator.not_empty(self.description):
-            dict['description'] = self.description
+            rs['description'] = self.description
         if ParamValidator.not_empty(self.process_date):
-            dict['processDate'] = self.process_date
+            rs['processDate'] = self.process_date
         if ParamValidator.not_empty(self.products):
-            dict['products'] = self.products
+            rs['products'] = self.products
         if ParamValidator.not_empty(self.vat_percentage):
-            dict['fVatPercentage'] = self.vat_percentage
+            rs['fVatPercentage'] = self.vat_percentage
         if ParamValidator.not_empty(self.exchange_url):
-            dict['exchangeUrl'] = self.exchange_url
-        return dict
+            rs['exchangeUrl'] = self.exchange_url
+        return rs
 
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
         # Do error checking.
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(dict)
+        self._response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
         self.handle_schema_errors(errors)
 

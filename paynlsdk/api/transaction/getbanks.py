@@ -2,12 +2,14 @@ import json
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
-from paynlsdk.objects import Error, BankDetailsSchema
+from paynlsdk.objects import Error, BankDetails, BankDetailsSchema
+
+from typing import List
 
 
 class Response(ResponseBase):
     def __init__(self,
-                 banks: list=[],
+                 banks: List[BankDetails]=[],
                  *args, **kwargs):
         self.banks = banks
         # the result is a list. We'll mimic the request object IF not yet available (should have been done though)
@@ -43,19 +45,19 @@ class Request(RequestBase):
 
     def get_parameters(self):
         # Get default api parameters
-        dict = self.get_std_parameters()
+        rs = self.get_std_parameters()
         # No further parameters
-        return dict
+        return rs
 
     @RequestBase.raw_response.setter
     def raw_response(self, raw_response):
         self._raw_response = raw_response
         # Do error checking.
-        dict = json.loads(self.raw_response)
+        rs = json.loads(self.raw_response)
         # The raw result IS a list, so we need the "many=True" argument
         schema = BankDetailsSchema(partial=True, many=True)
         # Bit of an oddball here. Result is a pure array of banks, so we'll mimic a decent response
-        banks, errors = schema.load(dict)
+        banks, errors = schema.load(rs)
         self.handle_schema_errors(errors)
         kwargs = {"result": Error(result=True), "banks": banks}
         self._response = Response(**kwargs)
