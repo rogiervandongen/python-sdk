@@ -25,7 +25,7 @@ class ResponseSchema(Schema):
     @post_load
     def create_response(self, data):
         #  We will map the result to a Response internal value
-        data['result'] = data['request']['result']
+        data['result'] = data['request'].result
         return Response(**data)
 
 
@@ -67,8 +67,9 @@ class Request(RequestBase):
         # Do error checking.
         rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(rs)
+        response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
+        self._response = response
 
     @property
     def response(self) -> Response:

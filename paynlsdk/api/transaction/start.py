@@ -200,7 +200,7 @@ class Request(RequestBase):
         if ParamValidator.not_empty(self.end_user.gender):
             innerdict['enduser[gender]'] = self.end_user.gender
         if ParamValidator.not_empty(self.end_user.dob):
-            innerdict['enduser[dob]'] = self.end_user.dob.strftime('%d-%m_%Y')
+            innerdict['enduser[dob]'] = self.end_user.dob.strftime('%d-%m-%Y')
         if ParamValidator.not_empty(self.end_user.phone_number):
             innerdict['enduser[phoneNumber]'] = self.end_user.phone_number
         if ParamValidator.not_empty(self.end_user.email_address):
@@ -270,8 +270,9 @@ class Request(RequestBase):
         self._raw_response = raw_response
         rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(rs)
+        response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
+        self._response = response
 
     @property
     def response(self) -> Response:
