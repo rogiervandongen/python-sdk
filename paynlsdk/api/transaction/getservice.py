@@ -98,8 +98,9 @@ class Request(RequestBase):
         # Do error checking.
         rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(rs)
+        response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
+        self._response = response
 
     @property
     def response(self) -> Response:

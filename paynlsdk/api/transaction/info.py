@@ -370,10 +370,11 @@ class Request(RequestBase):
         self._raw_response = raw_response
         rs = json.loads(self.raw_response)
         schema = ResponseSchema(partial=True)
-        self._response, errors = schema.load(rs)
-        #  Map transaction ID on response
-        self.response.transaction_id = self.transaction_id
+        response, errors = schema.load(rs)
         self.handle_schema_errors(errors)
+        self._response = response
+        #  Map transaction ID on response
+        self._response.transaction_id = self.transaction_id
 
     @property
     def response(self) -> Response:

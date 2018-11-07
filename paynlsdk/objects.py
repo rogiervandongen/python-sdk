@@ -41,9 +41,38 @@ class ErrorSchema(Schema):
 
 
 class Address(object):
+    """
+    Address details structure
+    """
     def __init__(self, initials: str=None, last_name: str=None, gender: str=None, street_name: str=None,
                  street_number: str = None, street_number_extension: str=None, zip_code: str=None, city: str=None,
                  region_code: str=None, country_code: str=None, country_name: str=None):
+        """
+        Create address instance
+
+        :param initials: Initials
+        :type initials: str
+        :param last_name: Last name
+        :type last_name: str
+        :param gender: Gender (m or f)
+        :type gender: str
+        :param street_name: Street name
+        :type street_name: str
+        :param street_number: Street number
+        :type street_number: str
+        :param street_number_extension: Street number extension
+        :type street_number_extension: str
+        :param zip_code: Zip code
+        :type zip_code:str
+        :param city: City
+        :type city: str
+        :param region_code:Region code or province
+        :type region_code: str
+        :param country_code: Country code (ISO)
+        :type country_code: str
+        :param country_name: Country name
+        :type country_name: str
+        """
         self.initials = initials
         self.last_name = last_name
         self.gender = gender
@@ -95,7 +124,22 @@ class AddressSchema(Schema):
 
 
 class Company(object):
+    """
+    Company details structure
+    """
     def __init__(self, name: str=None, coc_number: str=None, vat_number: str=None, country_code: str=None):
+        """
+        Create company details instance
+
+        :param name: company name
+        :type name: str
+        :param coc_number: Company COC number (KVK)
+        :type coc_number: str
+        :param vat_number: VAT registration number
+        :type vat_number: str
+        :param country_code: Company country code
+        :type country_code: str
+        """
         self.name = name
         self.coc_number = coc_number
         self.vat_number = vat_number
@@ -113,7 +157,22 @@ class CompanySchema(Schema):
 
 
 class Merchant(object):
+    """
+    Merchant details structure
+    """
     def __init__(self, id: str=None, name: str=None, public_name: str=None, state: int=None):
+        """
+        Create instance of Merchant details
+
+        :param id: merchant ID (M-xxxx-xxxx)
+        :type id: str
+        :param name: Merchant name
+        :type name: str
+        :param public_name: Merchant public name
+        :type public_name: str
+        :param state: Merchant status (indicates active state: 0 - inactive, 1 - active)
+        :type state: int
+        """
         self.id = id
         self.name = name
         self.public_name = public_name
@@ -135,7 +194,20 @@ class MerchantSchema(Schema):
 
 
 class PaymentMethod(object):
+    """
+    Payment method details structure
+    """
     def __init__(self, id: int=None, name: str=None, abbreviation: str=None):
+        """
+        Create instance of payment method details
+
+        :param id: Payment method ID
+        :type id: int
+        :param name: Payment method name
+        :type name: str
+        :param abbreviation: Payment method abbreviation
+        :type abbreviation: str
+        """
         self.id = id
         self.name = name
         self.abbreviation = abbreviation
@@ -155,7 +227,18 @@ class PaymentMethodSchema(Schema):
 
 
 class ServiceCategory(object):
+    """
+    Service category details structure
+    """
     def __init__(self, id: str=None, name: str=None):
+        """
+        Create service category instance
+
+        :param id: Service category ID
+        :type id: str
+        :param name: Service category name
+        :type name: str
+        """
         self.id = id
         self.name = name
 
@@ -164,7 +247,7 @@ class ServiceCategory(object):
 
 
 class ServiceCategorySchema(Schema):
-    id = fields.String()
+    id = fields.String()  # TODO: isn't this an integer?
     name = fields.String()
 
     @post_load
@@ -173,6 +256,9 @@ class ServiceCategorySchema(Schema):
 
 
 class OrderData(object):
+    """
+    Order data details structure
+    """
     def __init__(self,
                  product_id=None,
                  description=None,
@@ -182,6 +268,29 @@ class OrderData(object):
                  vat_percentage=None,
                  product_type=None,
                  ):
+        """
+        Create instance of Order data details
+
+        .. seealso::
+            :class:`paynlsdk.enums.enums.TaxClassCategory` for the :attr:`vat_code` values
+
+            :class:`paynlsdk.enums.enums.ProductType` for the :attr:`product_type` values
+
+        :param product_id: Product ID
+        :type product_id: str
+        :param description: Product description
+        :type description: str
+        :param price: Product price (cents)
+        :type price: int
+        :param quantity: Product quantity
+        :type quantity: int
+        :param vat_code: VAT code (N, L or H)
+        :type vat_code: str
+        :param vat_percentage: VAT percentage
+        :type vat_percentage: float
+        :param product_type: Product type
+        :type product_type: str
+        """
         self.product_id = product_id
         self.description = description
         self.price = price
@@ -209,7 +318,23 @@ class OrderDataSchema(Schema):
 
 
 class SalesData(object):
+    """
+    Sales data details structure
+    """
     def __init__(self, invoice_date: datetime=None, delivery_date: datetime=None, order_data: List[OrderData]=[]):
+        """
+        Create instance of SalesData details
+
+        .. seealso::
+            :class:`paynlsdk.objects.OrderData` for the order data structure
+
+        :param invoice_date: invoice date
+        :type invoice_date: str
+        :param delivery_date: delivery date
+        :type delivery_date: str
+        :param order_data: Order data list
+        :type order_data: List[OrderData]
+        """
         self.invoice_date = invoice_date
         self.delivery_date = delivery_date
         self.order_data: List[OrderData] = order_data  # TODO: is a LIST
@@ -219,18 +344,61 @@ class SalesData(object):
 
 
 class SalesDataSchema(Schema):
-    invoice_date = fields.DateTime(format='%d-%m-%Y', load_from='invoiceDate')
-    delivery_date = fields.String(format='%d-%m-%Y', load_from='deliveryDate')
-    order_data = fields.List(fields.Nested(OrderDataSchema), load_from='orderData')  # List is ASSUMNED! Could be DICT
+    invoice_date = fields.DateTime(format='%d-%m-%Y', allow_none=True, load_from='invoiceDate')
+    delivery_date = fields.DateTime(format='%d-%m-%Y', allow_none=True, load_from='deliveryDate')
+    order_data = fields.List(fields.Nested(OrderDataSchema), allow_none=True, required=False, Partial=True, load_from='orderData')
 
     @post_load
     def create_sales_data(self, data):
         return SalesData(**data)
 
+    @pre_load
+    def pre_processor(self, data):
+        if ParamValidator.is_empty(data['invoiceDate']):
+            data['invoiceDate'] = None
+        if ParamValidator.is_empty(data['deliveryDate']):
+            data['deliveryDate'] = None
+        if ParamValidator.is_empty(data['orderData']):
+            data['orderData'] = None
+        # TODO: orderdata probably, yet again, is a DICT of complex...
+        return data
+
 
 class Service(object):
+    """
+    Service details structure
+    """
     def __init__(self, id=None, name=None, description=None, publication=None, base_path=None,
                  module=None, sub_module=None, state=None, success_url=None, error_url=None, secret: str=None):
+        """
+        Create Service details instance
+
+        .. seealso::
+            :class:`paynlsdk.enums.enums.ActiveState.OrderData` for the state attribute
+
+        :param id: Service ID
+        :type id: str
+        :param name: Service name
+        :type name: str
+        :param description: Service description
+        :type description: str
+        :param publication: Service publication
+        :type publication: str
+        :param base_path: Service base path
+        :type base_path: str
+        :param module: Service module ID
+        :type module: int
+        :param sub_module: Service sub module ID
+        :type sub_module: int
+        :param state: Service status
+        :type state: str
+        :param success_url: Service callback url on success
+        :type success_url: str
+        :param error_url: Service callback url on errors
+        :type error_url: str
+        :param secret: Service secret
+        :type secret: str
+        """
         self.id = id
         self.name = name
         self.description = description
@@ -274,8 +442,31 @@ class ServiceSchema(Schema):
 
 
 class PaymentProfile(object):
+    """
+    Payment profile details structure
+    """
     def __init__(self, id: int=None, name: str=None, parent_id: int=None, public: bool=False,
                  payment_method_id: int=None, country_id: int=None, payment_tariff_id: int=None, noa_id: int=None):
+        """
+        Create instance of payment profile details
+
+        :param id: Payment profile ID
+        :type id: int
+        :param name: Payment profile name
+        :type name: str
+        :param parent_id: Payment profile parent ID
+        :type parent_id: int
+        :param public: Payment profile status
+        :type public: bool
+        :param payment_method_id: Payment method ID this payment profile belongs to
+        :type payment_method_id: int
+        :param country_id: Country ID
+        :type country_id: int
+        :param payment_tariff_id: Tariff ID
+        :type payment_tariff_id: int
+        :param noa_id: NOA ID
+        :type noa_id: int
+        """
         self.id = id
         self.name = name
         self.parent_id = parent_id
@@ -305,7 +496,18 @@ class PaymentProfileSchema(Schema):
 
 
 class CountryId(object):
+    """
+    Country details structure
+    """
     def __init__(self, id: str=None, name: str=None):
+        """
+        Create country detail structure
+
+        :param id: Country ID (ISO)
+        :type id: str
+        :param name: Country name
+        :type name: str
+        """
         self.id: str = id
         self.name: str = name
 
@@ -323,8 +525,46 @@ class CountryIdSchema(Schema):
 
 
 class ServicePaymentProfile(object):
+    """
+    Payment profile details structure
+
+    .. seealso::
+        :class:`paynlsdk.objects.CountryId` for usage of the :attr:`countries` attribute
+
+        :class:`paynlsdk.api.transaction.getservicepaymentoptions.Response` for usage
+
+        :class:`paynlsdk.client.transaction.get_service_payment_options` for usage
+
+        :class:`paynlsdk.client.paymentmethods.get_list` for usage
+
+    """
     def __init__(self, id: int=None, name: str=None, visible_name: str=None,
                  costs_fixed: int=0, costs_percentage: float=0, countries: List[CountryId]=None):
+        """
+        Create payment profile details
+
+        .. seealso::
+            :class:`paynlsdk.objects.CountryId` for usage of the :attr:`countries` attribute
+
+            :class:`paynlsdk.api.transaction.getservicepaymentoptions.Response` for usage
+
+            :class:`paynlsdk.client.transaction.get_service_payment_options` for usage
+
+            :class:`paynlsdk.client.paymentmethods.get_list` for usage
+
+        :param id: ID
+        :type id: int
+        :param name: name
+        :type name: str
+        :param visible_name: visible name
+        :type visible_name: str
+        :param costs_fixed: fixed cost
+        :type costs_fixed: int
+        :param costs_percentage: cost percentage
+        :type costs_percentage: float
+        :param countries: countries
+        :type countries: List[CountryId]
+        """
         self.id = id
         self.name = name
         self.visible_name = visible_name
@@ -362,6 +602,9 @@ class ServicePaymentProfileSchema(Schema):
 
 
 class RefundInfo(object):
+    """
+    Refund info details structure
+    """
     def __init__(self, payment_session_id: int=None, amount: int=None, description: str=None,
                  bank_account_holder: str=None, bank_account_number: str=None, bank_account_bic: str=None,
                  status_code: int=None, status_name: str=None, process_date: datetime=None):
@@ -396,8 +639,23 @@ class RefundInfoSchema(Schema):
 
 
 class TransactionStartInfo(object):
+    """
+    Transaction start info details structure
+    """
     def __init__(self, transaction_id: str=None, payment_url: str=None,
                  popup_allowed: bool=False, payment_reference: str=None):
+        """
+        Transaction start result sructure
+
+        :param transaction_id: transaction ID
+        :type transaction_id: str
+        :param payment_url: payment URL - use this to redirect the user to the payment screen
+        :type payment_url: str
+        :param popup_allowed: popup allowed?
+        :type popup_allowed: bool
+        :param payment_reference: payment reference
+        :type payment_reference: str
+        """
         self.transaction_id = transaction_id
         self.payment_url = payment_url
         self.popup_allowed = popup_allowed
@@ -419,6 +677,9 @@ class TransactionStartInfoSchema(Schema):
 
 
 class StornoDetails(object):
+    """
+    Storno information details structure
+    """
     def __init__(self,
                  storno_id=None,
                  storno_amount=None,
@@ -430,6 +691,28 @@ class StornoDetails(object):
                  reason=None,
                  email_address=None
                  ):
+        """
+        Storno details structure
+
+        :param storno_id: storno ID
+        :type storno_id: int
+        :param storno_amount: storno amount
+        :type storno_amount: int
+        :param bank_account: bank account number
+        :type bank_account: str
+        :param iban: IBAN number
+        :type iban: str
+        :param bic: BIC number
+        :type bic: str
+        :param city: city
+        :type city: str
+        :param date: storno date
+        :type date: str
+        :param reason: storno reason
+        :type reason: str
+        :param email_address: consumer email address
+        :type email_address: str
+        """
         self.storno_id = storno_id
         self.storno_amount = storno_amount
         self.bank_account = bank_account
@@ -451,7 +734,7 @@ class StornoDetailsSchema(Schema):
     iban = fields.String()
     bic = fields.String()
     city = fields.String()
-    date = fields.String(load_from='datetime')
+    date = fields.String(load_from='datetime')  # TODO: should be datetime instance
     reason = fields.String()
     email_address = fields.String(load_from='emailAddress')
 
@@ -470,7 +753,24 @@ class StornoDetailsSchema(Schema):
 
 
 class TransactionStartEnduser(object):
+    """
+    Transaction start info details structure used at the API response
+
+    .. seealso::
+        :class:`paynlsdk.api.transaction.start.Response` for usage details
+    """
     def __init__(self, blacklist: int=None):
+        """
+        Create transaction start user response structure
+
+        .. seealso::
+            :class:`paynlsdk.api.transaction.start.Response` for usage details
+
+            :class:`paynlsdk.enums.enums.Blacklist` for possible *blacklist* values
+
+        :param blacklist: blacklist bit (0, 1 or 2)
+        :type blacklist: int
+        """
         self.blacklist = blacklist
 
     def __repr__(self):
@@ -486,8 +786,27 @@ class TransactionStartEnduserSchema(Schema):
 
 
 class TransactionData(object):
+    """
+    Transaction data structure
+    """
     def __init__(self, currency=None, costs_vat=None, order_exchange_url=None, description=None, expire_date: datetime=None,
                  order_number=None):
+        """
+        Transaction data structure
+
+        :param currency: currency
+        :type currency: str
+        :param costs_vat: costs VAT
+        :type costs_vat: int
+        :param order_exchange_url: exchange url
+        :type order_exchange_url: str
+        :param description: description
+        :type description: str
+        :param expire_date: transaction expiry date
+        :type expire_date: datetime
+        :param order_number: order number
+        :type order_number: str
+        """
         self.currency = currency
         self.costs_vat = costs_vat
         self.order_exchange_url = order_exchange_url
@@ -513,9 +832,41 @@ class TransactionDataSchema(Schema):
 
 
 class TransactionStats(object):
+    """
+    Transaction stats data structure
+    """
     def __init__(self, id=None, website_name=None, service_name=None, service_code=None, order_amount=None,
                  created=None, internal_status=None, consumer_3d_secure=None, consumer_account_number=None,
                  profile_id=None, profile_name=None):
+        """
+        Transaction stats structure
+
+        ..seealso::
+            :class:`paynlsdk.enums.enums.Secure` for *consumer_3d_secure* possible values
+
+        :param id: ID
+        :type id: str
+        :param website_name: website name
+        :type website_name: str
+        :param service_name: service name
+        :type service_name: str
+        :param service_code: service code
+        :type service_code: str
+        :param order_amount: order amount (cents)
+        :type order_amount: int
+        :param created: created on
+        :type created: str
+        :param internal_status: internal status
+        :type internal_status: int
+        :param consumer_3d_secure: 3d security
+        :type consumer_3d_secure: int
+        :param consumer_account_number: account number of consumer
+        :type consumer_account_number: str
+        :param profile_id: profile ID
+        :type profile_id: int
+        :param profile_name: profile name
+        :type profile_name: str
+        """
         self.id = id
         self.website_name = website_name
         self.service_name = service_name
@@ -548,13 +899,44 @@ class TransactionStatsSchema(Schema):
     def create_transaction_stats(self, data):
         return TransactionStats(**data)
 
-# TODO: LIST TransactionStats[] (jsonproperty transactions)
-
 
 class Connection(object):
+    """
+    Connection details data structure
+    """
     def __init__(self, trust=None, country=None, city=None, location_lat=None, location_lon=None,
                  browser_data=None, ip_address=None, blacklist=None, host=None, order_ip_address=None,
                  order_return_url=None, merchant_code=None, merchant_name=None):
+        """
+        Connection details structure
+
+        :param trust: connection trust indication (-10 - 10)
+        :type trust: int
+        :param country: country
+        :type country: str
+        :param city: city
+        :type city: str
+        :param location_lat: location latitude
+        :type location_lat: str
+        :param location_lon: location longitude
+        :type location_lon: str
+        :param browser_data: browser data
+        :type browser_data: str
+        :param ip_address: IP address
+        :type ip_address: str
+        :param blacklist: blacklist indication
+        :type blacklist: int
+        :param host: host info
+        :type host: str
+        :param order_ip_address: order IP address
+        :type order_ip_address: str
+        :param order_return_url: order return url
+        :type order_return_url: str
+        :param merchant_code: merchant code (M-xxxx-xxxx)
+        :type merchant_code: str
+        :param merchant_name: Merchant name
+        :type merchant_name: str
+        """
         self.trust = trust
         self.country = country
         self.city = city
@@ -594,8 +976,35 @@ class ConnectionSchema(Schema):
 
 
 class TransactionStartStatsData(object):
+    """
+    Transaction stats data structure used at API request
+
+    .. seealso::
+        :class:`paynlsdk.api.transaction.start.Request` for usage example
+    """
     def __init__(self, promotor_id: int=None, info: str=None, tool: str=None,
                  extra1: str=None, extra2: str=None, extra3: str=None, domain_id=None):
+        """
+        Create stats details instance
+
+        .. seealso::
+            :class:`paynlsdk.api.transaction.start.Request` for usage example
+
+        :param promotor_id: promotor ID
+        :type promotor_id: int
+        :param info: information
+        :type info: str
+        :param tool: tool identifiction
+        :type tool: str
+        :param extra1: extra information field 1
+        :type extra1: str
+        :param extra2: extra information field 2
+        :type extra2: str
+        :param extra3: extra information field 3
+        :type extra3: str
+        :param domain_id: domain ID
+        :type domain_id: str
+        """
         self.promotor_id = promotor_id
         self.info = info
         self.tool = tool
@@ -609,8 +1018,31 @@ class TransactionStartStatsData(object):
 
 
 class StatsDetails(object):
-    def __init__(self, payment_session_id=None, tool=None, info=None, promotor_id=None,
-                 extra1=None, extra2=None, extra3=None, object=None):
+    """
+    STats details data structure
+    """
+    def __init__(self, payment_session_id: int=None, tool: str=None, info: str=None, promotor_id: int=None,
+                 extra1: str=None, extra2: str=None, extra3: str=None, object: str=None):
+        """
+        Create stats details instance
+
+        :param payment_session_id: payment session id
+        :type payment_session_id: id
+        :param tool: tool identifiction
+        :type tool: str
+        :param info: information
+        :type info: str
+        :param promotor_id: promotor ID
+        :type promotor_id: int
+        :param extra1: extra information field 1
+        :type extra1: str
+        :param extra2: extra information field 2
+        :type extra2: str
+        :param extra3: extra information field 3
+        :type extra3: str
+        :param object: object identification
+        :type object: str
+        """
         self.payment_session_id = payment_session_id
         self.tool = tool
         self.info = info
@@ -640,6 +1072,9 @@ class StatsDetailsSchema(Schema):
 
 
 class PaymentDetails(object):
+    """
+    Payment details data structure
+    """
     def __init__(self,
                  amount=None,
                  currency_amount=None,
@@ -755,6 +1190,9 @@ class PaymentDetailsSchema(Schema):
 
 
 class EndUserBase(object):
+    """
+    End User base details structure
+    """
     def __init__(self, customer_reference: str=None, language: str=None, initials: str=None, gender: str=None,
                  last_name: str=None, dob: datetime=None,
                  phone_number: str=None, email_address: str=None, bank_account: str=None, iban: str=None, bic: str=None,
@@ -766,7 +1204,7 @@ class EndUserBase(object):
         self.initials = initials
         self.gender = gender  #optional, Enum
         self.last_name = last_name
-        self.dob = dob
+        self.dob: datetime = dob
         self.phone_number = phone_number
         self.email_address = email_address
         self.bank_account = bank_account
@@ -782,9 +1220,35 @@ class EndUserBase(object):
 
 
 class EndUser(EndUserBase):
+    """
+    End User details structure
+    """
     def __init__(self, payment_details: PaymentDetails=None, storno_details: StornoDetails=None,
                  stats_details: StatsDetails=None,
                  *args, **kwargs):
+        """
+        Create EndUser details
+
+        .. seealso::
+            :class:`paynlsdk.objects.EndUserBase` for the base structure
+
+            :class:`paynlsdk.objects.PaymentDetails` for the *payment_details* structure
+
+            :class:`paynlsdk.objects.StornoDetails` for the *storno_details* structure
+
+            :class:`paynlsdk.objects.StatsDetails` for the *stats_details* structure
+
+        :param payment_details: Payment details
+        :type payment_details: PaymentDetails
+        :param storno_details: Storno details
+        :type storno_details: StornoDetails
+        :param stats_details: Stats details
+        :type stats_details: StatsDetails
+        :param args: unused
+        :type args: list
+        :param kwargs: Any keyword arguments the :class:`paynlsdk.objects.EndUserBase` receives
+        :type kwargs: dict
+        """
         self.payment_details: PaymentDetails = payment_details
         self.storno_details: StornoDetails = storno_details
         self.stats_details: StatsDetails = stats_details
@@ -829,9 +1293,27 @@ class EndUserSchema(Schema):
 
 
 class TransactionEndUser(EndUserBase):
+    """
+    Transaction End User details structure
+    """
     def __init__(self,
                  access_code: str=None, customer_trust: int=None,
                  *args, **kwargs):
+        """
+        Create TransactionEndUser details
+
+        .. seealso::
+            :class:`paynlsdk.objects.EndUserBase` for the base structure
+
+        :param access_code: access code
+        :type access_code: str
+        :param customer_trust: customer trust bit
+        :type customer_trust: int
+        :param args: unused
+        :type args: list
+        :param kwargs: Any keyword arguments the :class:`paynlsdk.objects.EndUserBase` receives
+        :type kwargs: dict
+        """
         super().__init__(**kwargs)
         self.access_code = access_code
         self.customer_trust = customer_trust
@@ -872,6 +1354,9 @@ class TransactionEndUserSchema(Schema):
 
 
 class TransactionStatusDetails(object):
+    """
+    Transaction status details structure
+    """
     def __init__(self,
                  transaction_id: str=None,
                  order_id: str=None,
@@ -944,6 +1429,9 @@ class TransactionStatusDetailsSchema(Schema):
 
 
 class RefundSuccessInfo(object):
+    """
+    Refund success details structure
+    """
     def __init__(self,
                  order_id: str=None,
                  amount: int=None,
@@ -952,6 +1440,22 @@ class RefundSuccessInfo(object):
                  bankaccount_number: str=None,
                  refund_id: str=None,
                  ):
+        """
+        Create Refund success information structure
+
+        :param order_id: Order ID
+        :type order_id: str
+        :param amount: amount
+        :type amount: int
+        :param amount_refunded: Refunded amount
+        :type amount_refunded: int
+        :param voucher_number: Voucher number
+        :type voucher_number: str
+        :param bankaccount_number: Bank account number
+        :type bankaccount_number: str
+        :param refund_id: Refund ID
+        :type refund_id: str
+        """
         self.order_id = order_id
         self.amount = amount
         self.amount_refunded = amount_refunded
@@ -977,6 +1481,9 @@ class RefundSuccessInfoSchema(Schema):
 
 
 class RefundFailInfo(object):
+    """
+    Refund fail details structure
+    """
     def __init__(self,
                  order_id: str=None,
                  amount: int=None,
@@ -985,6 +1492,22 @@ class RefundFailInfo(object):
                  bankaccount_number: str=None,
                  reason: str=None,
                  ):
+        """
+        Create Refund failure information structure
+
+        :param order_id: Order ID
+        :type order_id: str
+        :param amount: amount
+        :type amount: int
+        :param refund_amount: Refund amount
+        :type refund_amount: int
+        :param voucher_number: Voucher number
+        :type voucher_number: str
+        :param bankaccount_number: Bank account number
+        :type bankaccount_number: str
+        :param reason: Refund reason
+        :type reason: str
+        """
         self.order_id = order_id
         self.amount = amount
         self.refund_amount = refund_amount
@@ -1010,6 +1533,9 @@ class RefundFailInfoSchema(Schema):
 
 
 class BankDetails(object):
+    """
+    Bank details structure
+    """
     def __init__(self,
                  id: int=None,
                  name: str=None,
@@ -1017,6 +1543,20 @@ class BankDetails(object):
                  icon: str=None,
                  available: bool=False
                  ):
+        """
+        Create bank details instance
+
+        :param id: Bank ID
+        :type id: int
+        :param name: Bank name
+        :type name: str
+        :param issuer_id: Issue ID
+        :type issuer_id: str
+        :param icon: Icon
+        :type icon: str
+        :param available: availability bit
+        :type available: bool
+        """
         self.id = id
         self.name = name
         self.issuer_id = issuer_id
@@ -1039,44 +1579,31 @@ class BankDetailsSchema(Schema):
         return BankDetails(**data)
 
 
-class SalesData(object):
-    def __init__(self,
-                 invoice_date: datetime=None,
-                 delivery_date: datetime=None,
-                 order_data: List=[OrderData],
-                 ):
-        self.invoice_date = invoice_date
-        self.delivery_date = delivery_date
-        self.order_data = order_data
-
-    def __repr__(self):
-        return self.__dict__.__str__()
-
-
-class SalesDataSchema(Schema):
-    invoice_date = fields.DateTime(format='%d-%m-%Y', allow_none=True, load_from='invoiceDate')
-    delivery_date = fields.DateTime(format='%d-%m-%Y', allow_none=True, load_from='deliveryDate')
-    order_data = fields.List(fields.Nested(OrderDataSchema), allow_none=True, required=False, Partial=True, load_from='orderData')
-
-    @post_load
-    def create_sales_data(self, data):
-        return SalesData(**data)
-
-    @pre_load
-    def pre_processor(self, data):
-        if ParamValidator.is_empty(data['invoiceDate']):
-            data['invoiceDate'] = None
-        if ParamValidator.is_empty(data['deliveryDate']):
-            data['deliveryDate'] = None
-        if ParamValidator.is_empty(data['orderData']):
-            data['orderData'] = None
-        # TODO: orderdata probably, yet again, is a DICT of complex...
-        return data
-
-
 class PaymentOptionBase(object):
+    """
+    Payment option base details structure
+    """
     def __init__(self, id: int=None, name: str=None, visible_name: str=None,
                  img: str=None, path: str=None, state: int=None):
+        """
+        Create Payment option details instance
+
+        .. seealso::
+            :class:`paynlsdk.enums.enums.ActiveState` for payment option :attr:`state` values
+
+        :param id: ID
+        :type id: int
+        :param name: name
+        :type name: str
+        :param visible_name: visible name
+        :type visible_name: str
+        :param img: image name + ext
+        :type img: str
+        :param path: relative image path
+        :type path: str
+        :param state: option status (0: unavailable, 1: available)
+        :type state: int
+        """
         self.id = id
         self.name = name
         self.visible_name = visible_name
@@ -1089,7 +1616,21 @@ class PaymentOptionBase(object):
 
 
 class PaymentSubOption(PaymentOptionBase):
+    """
+    Payment suboption details structure
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Create Payment suboption details instance
+
+        .. seealso::
+            :func:`paynlsdk.objects.PaymentOptionBase.__init__` for the *kwargs* attribute values
+
+        :param args: unused
+        :type args: list
+        :param kwargs: Any keyword arguments the :class:`paynlsdk.objects.PaymentOptionBase` receives
+        :type kwargs: dict
+        """
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -1109,12 +1650,31 @@ class PaymentSubOptionSchema(Schema):
         return PaymentSubOption(**data)
 
 
-# TODO: LIST/DICT (PaymentSubOptions: Dictionary<int, PaymentSupOption>)
-
-
 class PaymentOption(PaymentOptionBase):
+    """
+    Payment option details structure
+    """
     def __init__(self, payment_method_id: int=None, use_only_in_store: bool=False,
                  payment_sub_options: Dict[int, PaymentSubOption]={}, *args, **kwargs):
+        """
+        Create Payment option details instance
+
+        .. seealso::
+            :func:`paynlsdk.objects.PaymentOptionBase.__init__` for the *kwargs* attribute values
+
+            :class:`paynlsdk.objects.PaymentSubOption` for the *payment_options* type
+
+        :param payment_method_id: payment method ID
+        :type payment_method_id: int
+        :param use_only_in_store: can we only use this payment method in a store?
+        :type use_only_in_store: bool
+        :param payment_sub_options: Payment sub options
+        :type payment_sub_options: Dict[int, PaymentSubOption]
+        :param args: unused
+        :type args: list
+        :param kwargs: Any keyword arguments the :class:`paynlsdk.objects.PaymentOptionBase` receives
+        :type kwargs: dict
+        """
         self.payment_method_id = payment_method_id
         self.use_only_in_store = use_only_in_store
         self.payment_sub_options: Dict[int, PaymentSubOption] = payment_sub_options
@@ -1162,8 +1722,32 @@ class PaymentOptionSchema(Schema):
 
 
 class CountryOption(object):
+    """
+    Country option details structure
+    """
     def __init__(self, id: int=None, name: str=None, visible_name: str=None, in_eu: bool=False,
                  img: str=None, path: str=None, payment_option_list: Dict[int, PaymentOption]={}):
+        """
+        Create country option instance
+
+        .. seealso::
+            :class:`paynlsdk.objects.PaymentOption` for payment option details
+
+        :param id: ID
+        :type id: int
+        :param name: name
+        :type name: str
+        :param visible_name: visible name
+        :type visible_name: str
+        :param in_eu: available in EU?
+        :type in_eu: bool
+        :param img: image name + ext
+        :type img: str
+        :param path: relative image path
+        :type path: str
+        :param payment_option_list: Payment options
+        :type payment_option_list: Dict[int, PaymentOption]
+        """
         self.id = id
         self.name = name
         self.visible_name = visible_name
