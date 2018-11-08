@@ -13,7 +13,7 @@ class PaymentMethods(object):
         :param payment_method_id: payment method ID (defaults to 10, or iDeal)
         :type payment_method_id: int
         :return: List of banks
-        :rtype: List[PaymentMethod]
+        :rtype: List[ServicePaymentProfile]
         """
         from paynlsdk.api.transaction.getservicepaymentoptions import Request
         client = APIClient()

@@ -9,6 +9,11 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Request object for the Validate::payserverip API
+
+    :param bool result: validation result. True if request was for a valid PayNL server
+    """
     def __init__(self,
                  result: bool=None,
                  *args, **kwargs):
@@ -49,6 +54,11 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Validate::payserverip API
+
+    :param str ip_address: IP address to validate
+    """
     def __init__(self, ip_address: str=None):
         """
         Initialize the Request object

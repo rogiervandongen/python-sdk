@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from paynlsdk.api.client import APIClient
 from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser, BankDetails
 
@@ -137,6 +139,25 @@ class Transaction(object):
         return Transaction.status_response(transaction_id)
 
     @staticmethod
+    def refund(transaction_id: str, amount: int=None, description: str=None, process_date: datetime=None):
+        """
+        Refund (part of) a transaction
+
+        :param transaction_id: transaction ID
+        :type transaction_id: str
+        :param amount: transaction amount to refund
+        :type amount: int
+        :param description: refund description
+        :type description: str
+        :param process_date: date at which refund needs to be processed
+                TODO: this *should* be a datetime
+        :type process_date: str
+        :return: refund result
+        :rtype: paynlsdk.api.transaction.refund.Response
+        """
+        return Transaction.refund_response(transaction_id, amount, description, process_date)
+
+    @staticmethod
     def start(amount: str,
               ip_address: str,
               finish_url: str,
@@ -272,6 +293,17 @@ class Transaction(object):
         :rtype: paynlsdk.api.transaction.status.Request
         """
         from paynlsdk.api.transaction.status import Request
+        return Request()
+
+    @staticmethod
+    def refund_request():
+        """
+        Get a transaction refund :class:`paynlsdk.api.transaction.refund.Request` instance
+
+        :return: Transaction refund request instance
+        :rtype: paynlsdk.api.transaction.refund.Request
+        """
+        from paynlsdk.api.transaction.refund import Request
         return Request()
 
     @staticmethod
@@ -451,6 +483,31 @@ class Transaction(object):
         from paynlsdk.api.transaction.status import Request
         client = APIClient()
         request = Request(transaction_id)
+        client.perform_request(request)
+        return request.response
+
+    @staticmethod
+    def refund_response(transaction_id: str, amount: int=None, description: str=None, process_date: datetime=None):
+        """
+        Get a transaction refund :class:`paynlsdk.api.transaction.refund.Response` instance
+
+        Please note this will immediately call the API, returning the response instance
+
+        :param transaction_id: transaction ID
+        :type transaction_id: str
+        :param amount: transaction amount to refund
+        :type amount: int
+        :param description: refund description
+        :type description: str
+        :param process_date: date at which refund needs to be processed
+                TODO: this *should* be a datetime
+        :type process_date: str
+        :return: transaction status
+        :rtype: paynlsdk.api.transaction.refund.Response
+        """
+        from paynlsdk.api.transaction.refund import Request
+        client = APIClient()
+        request = Request(transaction_id, amount, description, process_date)
         client.perform_request(request)
         return request.response
 
