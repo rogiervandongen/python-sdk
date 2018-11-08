@@ -9,6 +9,11 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::capture API
+
+    :param bool result: Result of the API call
+    """
     def __init__(self,
                  *args, **kwargs):
         # we will force a result since we only have the error object
@@ -28,6 +33,13 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::capture API
+
+    :param str transaction_id: transaction ID
+    :param dict products: products
+    :param str tracktrace: tracktrace code
+    """
     def __init__(self, transaction_id: str=None, products: dict={}, tracktrace: str=None):
         self.transaction_id = transaction_id
         self.products = products

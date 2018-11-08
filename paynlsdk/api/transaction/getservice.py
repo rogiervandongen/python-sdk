@@ -11,6 +11,14 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::getservice API
+
+    :param Merchant merchant: Merchant details
+    :param Service merchant: Service details
+    :param dict settings: any relevant settings (key/value)
+    :param country_options Dict[str, CountryOption]: country options
+    """
     def __init__(self,
                  merchant: Merchant = None,
                  service: Service = None,
@@ -62,6 +70,11 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::getservice API
+
+    :param str payment_method_id: Payment method ID
+    """
     def __init__(self, payment_method_id: int=None):
         self.payment_method_id = payment_method_id
         super().__init__()

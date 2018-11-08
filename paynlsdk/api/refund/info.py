@@ -9,6 +9,12 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Refund::info API
+
+    :param str refund_id: Refund ID
+    :param RefundInfo refund: Refund information
+    """
     def __init__(self,
                  refund_id: str=None,
                  refund: RefundInfo=None,
@@ -40,6 +46,11 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Refund::info API
+
+    :param str refund_id: Refund ID
+    """
     def __init__(self, refund_id: str=None):
         self.refund_id = refund_id
         super().__init__()

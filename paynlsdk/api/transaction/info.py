@@ -12,6 +12,16 @@ from paynlsdk.exceptions import TransactionStatusException, TransactionNotAuthor
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::info API
+
+    :param Connection connection: connection details
+    :param EndUser enduser: enduser details
+    :param PaymentDetails payment_details: payment details
+    :param StornoDetails storno_details: storno details
+    :param StatsDetails stats_details: stats details
+    :param str transaction_id: transaction ID
+    """
     def __init__(self,
                  connection: Connection=None,
                  enduser: EndUser=None,
@@ -331,6 +341,12 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::info API
+
+    :param str transaction_id: transaction ID
+    :param str entrance_code: entrance code
+    """
     def __init__(self, transaction_id: str=None, entrance_code: str=None):
         self.transaction_id = transaction_id
         self.entrance_code = entrance_code

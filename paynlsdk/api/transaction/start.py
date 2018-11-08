@@ -10,6 +10,12 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::start API
+
+    :param TransactionStartEnduser end_user: enduser details
+    :param TransactionStartInfo transaction: transaction details
+    """
     def __init__(self,
                  end_user: TransactionStartEnduser=None,
                  transaction: TransactionStartInfo=None,
@@ -48,8 +54,25 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::start API
+
+    :param int amount: transaction amount in cents
+    :param str ip_address: IP address of end user
+    :param str finish_url: URL where end user will be redirected to
+    :param int payment_option_id: payment option ID
+    :param int payment_option_sub_id: payment suboption ID
+    :param TransactionData transaction: transaction data details
+    :param TransactionStartStatsData stats_data: transaction stats data details
+    :param TransactionEndUser end_user: transaction end user details
+    :param SalesData sale_data: transaction sales details
+    :param bool test_mode: True to perform transaction in TEST modus
+    :param str transfer_type: transfer type.
+                              Use transaction, merchant or alliance to change the benificiary owner of the transaction
+    :param str transfer_value: transfer_value. MerchantId (M-xxxx-xxxx) or orderId
+    """
     def __init__(self,
-                 amount: str=None,
+                 amount: int=None,
                  ip_address: str=None,
                  finish_url: str=None,
                  payment_option_id: int=None,
@@ -236,7 +259,7 @@ class Request(RequestBase):
                 innerdict['enduser[address][countryCode]'] = self.end_user.address.country_code
         if not ParamValidator.is_null(self.end_user.invoice_address):
             if not ParamValidator.is_empty(self.end_user.invoice_address.initials):
-                innerdict['enduser[invoiceAddress][initials'] = self.end_user.invoice_address.initials
+                innerdict['enduser[invoiceAddress][initials]'] = self.end_user.invoice_address.initials
             if not ParamValidator.is_empty(self.end_user.invoice_address.last_name):
                 innerdict['enduser[invoiceAddress][lastName]'] = self.end_user.invoice_address.last_name
             if not ParamValidator.is_empty(self.end_user.invoice_address.gender):

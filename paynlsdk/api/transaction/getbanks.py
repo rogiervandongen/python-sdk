@@ -8,6 +8,11 @@ from typing import List
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::getbanks API
+
+    :param List[BankDetails] banks: list of banks
+    """
     def __init__(self,
                  banks: List[BankDetails]=[],
                  *args, **kwargs):
@@ -22,6 +27,9 @@ class Response(ResponseBase):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::getbanks API
+    """
     def __init__(self):
         super().__init__()
 

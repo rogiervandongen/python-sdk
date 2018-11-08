@@ -9,6 +9,11 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::voidauthorization API
+
+    :param bool result: Result of the API call
+    """
     def __init__(self,
                  result: bool=None,
                  *args, **kwargs):
@@ -30,6 +35,11 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::voidauthorization API
+
+    :param str transaction_id: transaction ID
+    """
     def __init__(self, transaction_id: str=None):
         self.transaction_id = transaction_id
         super().__init__()

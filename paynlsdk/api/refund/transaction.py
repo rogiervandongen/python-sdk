@@ -9,16 +9,28 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Refund::transaction API
+
+    :param dict refunded_transactions: refunded transactions information
+    :param dict failed_transactions: failed refunds information
+    :param dict products: product info (keys: productid; values: quantity)
+    :param int amount_refunded: amount that was refunded
+    :param str description: refunds description
+    :param str refund_id: Refund ID. Please note this is NOT guaranteed. Value is only returned for IBAN based payments
+    """
     def __init__(self,
                  refunded_transactions: dict={},  # Should probably be typehinted with Dict[str, RefundSuccessInfoSchema]
                  failed_transactions: dict={},  # Should probably be typehinted with Dict[str, RefundFailInfoSchema]
                  amount_refunded: int=None,
                  description: str=None,
+                 refund_id: str=None,
                  *args, **kwargs):
         self.refunded_transactions = refunded_transactions
         self.failed_transactions = failed_transactions
         self.amount_refunded = amount_refunded
         self.description = description
+        self.refund_id = refund_id
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -40,6 +52,7 @@ class ResponseSchema(Schema):
     failed_transactions = fields.List(fields.Nested(RefundFailInfoSchema), load_from='failedTransactions')
     amount_refunded = fields.Integer(load_from='amountRefunded')
     description = fields.String()
+    refund_id = fields.String(load_from='refundId', allow_none=True, required=False)
 
     @pre_load
     def pre_processor(self, data):
@@ -83,6 +96,17 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Refund::transaction API
+
+    :param str transaction_id: Refund ID
+    :param int amount: refund amount
+    :param str description: refunds description
+    :param str process_date: process date
+    :param dict products: product info (keys: productid; values: quantity)
+    :param float vat_percentage: vat percentage
+    :param str exchange_url: exchange url
+    """
     def __init__(self,
                  transaction_id: str=None,
                  amount: int=None,

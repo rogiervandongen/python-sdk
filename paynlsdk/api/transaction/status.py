@@ -9,6 +9,11 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::status API
+
+    :param PaymentDetails payment_details: payment details
+    """
     def __init__(self,
                  payment_details: TransactionStatusDetails=None,
                  *args, **kwargs):
@@ -125,6 +130,11 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Response object for the Transaction::status API
+
+    :param str transaction_id: transaction ID
+    """
     def __init__(self, transaction_id: str=None):
         self.transaction_id = transaction_id
         super().__init__()

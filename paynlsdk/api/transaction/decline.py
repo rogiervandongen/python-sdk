@@ -9,6 +9,12 @@ from paynlsdk.validators import ParamValidator
 
 
 class Response(ResponseBase):
+    """
+    Response object for the Transaction::decline API
+
+    :param bool result: Result of the API call
+    :param str message: message related to the API call
+    """
     def __init__(self,
                  result: bool=None,
                  message: str=None,
@@ -30,6 +36,12 @@ class ResponseSchema(Schema):
 
 
 class Request(RequestBase):
+    """
+    Request object for the Transaction::decline API
+
+    :param str order_id: transaction ID (wrongly names order_id)
+    :param str entrance_code: Entrance code
+    """
     def __init__(self, order_id: str=None, entrance_code: str=None):
         self.order_id = order_id
         self.entrance_code = entrance_code
