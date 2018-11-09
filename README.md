@@ -265,10 +265,14 @@ try:
     
     enduser = TransactionEndUser(language='nl', initials='A', last_name='Jansen', gender='m', dob=datetime(1970,1,2),
                                  phone_number='0612345678', email_address='someone@somewhere.com', iban='<ibannumber>',
-                                 address=Address(street_name='Street', street_number='1', zip_code='1234AB', 
-                                                 city='Rotterdam', country_code='NL', country_name='Nederland'),
-                                 invoice_address=Address(street_name='Street', street_number='1', zip_code='1234AB', 
-                                                         city='Rotterdam', country_code='NL', country_name='Nederland'),
+                                address=Address(initials='A', last_name='Jansen', gender='m', 
+                                                street_name='Street', street_number='1', street_number_extension='A', 
+                                                zip_code='1234AB', city='Rotterdam', region_code='ZH', 
+                                                country_code='NL', country_name='Nederland'),
+                                invoice_address=Address(initials='A', last_name='Jansen', gender='m', 
+                                                        street_name='Street', street_number='1', street_number_extension='A', 
+                                                        zip_code='1234AB', city='Rotterdam', region_code='ZH', 
+                                                        country_code='NL', country_name='Nederland'),
                                  company=Company(name='Wizard Inc', coc_number='12345678',
                                                 vat_number='NL123456789B01', country_code='NL')
                                  )
