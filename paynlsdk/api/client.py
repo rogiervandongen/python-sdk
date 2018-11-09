@@ -7,7 +7,7 @@ from paynlsdk.exceptions import ErrorException
 from paynlsdk.validators import ParamValidator
 
 PAYNL_END_POINT = "https://rest-api.pay.nl"
-PAYNL_CLIENT_VERSION = "0.0.3"
+PAYNL_CLIENT_VERSION = "1.0.0"
 
 
 class APIAuthentication(object):
