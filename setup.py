@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: SDK',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     keywords='PAYNL, SDK, Python',
     # Dependencies
