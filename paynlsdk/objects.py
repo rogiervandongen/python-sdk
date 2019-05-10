@@ -1027,7 +1027,7 @@ class StatsDetails(object):
         Create stats details instance
 
         :param payment_session_id: payment session id
-        :type payment_session_id: id
+        :type payment_session_id: int
         :param tool: tool identifiction
         :type tool: str
         :param info: information
