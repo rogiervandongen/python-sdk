@@ -93,6 +93,14 @@ class Response(ResponseBase):
         """
         return self.payment_details.state_name == 'VERIFY'
 
+    def is_being_refunded(self) -> bool:
+        """
+        Check if the transaction has a pending REFUND
+        :return: True of transaction has a pending REFUND, False otherwise
+        :rtype: bool
+        """
+        return self.payment_details.state_name == 'REFUNDING'
+
     def is_refunded(self, allow_partial_refunds: bool = True) -> bool:
         """
         Check if the transaction has been (partially) REFUNDED
@@ -103,6 +111,8 @@ class Response(ResponseBase):
         :rtype: bool
         """
         if self.payment_details.state_name == 'REFUND':
+            return True
+        elif self.payment_details.state_name == 'REFUNDING':
             return True
         elif allow_partial_refunds and self.payment_details.state_name == 'PARTIAL_REFUND':
             return True

@@ -1,6 +1,6 @@
 import json
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, pre_load
 
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
@@ -39,6 +39,12 @@ class ResponseSchema(Schema):
     request = fields.Nested(ErrorSchema, required=True)
     refund_id = fields.String(required=True, load_from='refundId')
     refund = fields.Nested(RefundInfoSchema, required=True, load_from='refund')
+
+    @pre_load
+    def pre_processor(self, data):
+        if data['refund'] == '':
+            data['refund'] = None
+        return data
 
     @post_load
     def create_response(self, data):

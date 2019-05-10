@@ -67,6 +67,7 @@ class PaymentStatus(Enum):
     PARTIAL_REFUND = -82
     REFUND = -81
     EXPIRED = -80
+    REFUND_IN_PROGRESS = -72
     CHARGEBACK_1 = -71
     CHARGEBACK_2 = -70
     PAID_CHECKAMOUNT = -51

@@ -12,7 +12,7 @@ class Response(ResponseBase):
     """
     Response object for the Transaction::status API
 
-    :param PaymentDetails payment_details: payment details
+    :param TransactionStatusDetails payment_details: payment details
     """
     def __init__(self,
                  payment_details: TransactionStatusDetails=None,
