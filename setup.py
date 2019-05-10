@@ -7,7 +7,7 @@ setuptools.setup(
     name="paynlsdk",
     version="1.0.1",
     author="Ing. R.J. van Dongen",
-    author_email="rogier@sebsoft.com",
+    author_email="rogier@sebsoft.nl",
     description="PayNL SDK",
     long_description=long_description,
     long_description_content_type="text/markdown",
