@@ -45,13 +45,12 @@ class Response(ResponseBase):
         return self.response.amount_refunded / 100
 
 
-
 class ResponseSchema(Schema):
     request = fields.Nested(ErrorSchema)
-    refunded_transactions = fields.List(fields.Nested(RefundSuccessInfoSchema), load_from='refundedTransactions')
-    failed_transactions = fields.List(fields.Nested(RefundFailInfoSchema), load_from='failedTransactions')
-    amount_refunded = fields.Integer(load_from='amountRefunded')
-    description = fields.String()
+    refunded_transactions = fields.List(fields.Nested(RefundSuccessInfoSchema), allow_none=True, load_from='refundedTransactions')
+    failed_transactions = fields.List(fields.Nested(RefundFailInfoSchema), allow_none=True, load_from='failedTransactions')
+    amount_refunded = fields.Integer(load_from='amountRefunded', allow_none=True)
+    description = fields.String(allow_none=True)
     refund_id = fields.String(load_from='refundId', allow_none=True, required=False)
 
     @pre_load
@@ -62,7 +61,7 @@ class ResponseSchema(Schema):
         elif 'refundedTransactions' in data and ParamValidator.not_empty(data['refundedTransactions']):
             #  v2.x has NO fields.Dict implementation like fields.List, so we'll have to handle this ourselves
             list = []
-            for i, item in data['refundedTransactions'].items():
+            for item in data['refundedTransactions']:
                 list.append(item)
             data['refundedTransactions'] = list
         if 'failedTransactions' in data and ParamValidator.is_empty(data['failedTransactions']):
@@ -70,7 +69,7 @@ class ResponseSchema(Schema):
         elif 'failedTransactions' in data and ParamValidator.not_empty(data['failedTransactions']):
             #  v2.x has NO fields.Dict implementation like fields.List, so we'll have to handle this ourselves
             list = []
-            for i, item in data['failedTransactions'].items():
+            for item in data['failedTransactions']:
                 list.append(item)
             data['failedTransactions'] = list
         return data

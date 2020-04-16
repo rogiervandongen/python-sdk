@@ -31,7 +31,7 @@ class Error(object):
 
 
 class ErrorSchema(Schema):
-    result = fields.Boolean()
+    result = fields.Boolean(load_from='result')
     code = fields.String(load_from='errorId')
     message = fields.String(load_from='errorMessage')
 
