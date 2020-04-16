@@ -983,7 +983,7 @@ class TransactionStartStatsData(object):
         :class:`paynlsdk.api.transaction.start.Request` for usage example
     """
     def __init__(self, promotor_id: int=None, info: str=None, tool: str=None,
-                 extra1: str=None, extra2: str=None, extra3: str=None, domain_id=None, object=None):
+                 extra1: str=None, extra2: str=None, extra3: str=None, domain_id: str=None, objectstr: str=None):
         """
         Create stats details instance
 
@@ -1012,7 +1012,7 @@ class TransactionStartStatsData(object):
         self.extra2 = extra2
         self.extra3 = extra3
         self.domain_id = domain_id
-        self.object = object
+        self.object = objectstr
 
     def __repr__(self):
         return str(self.__dict__)
