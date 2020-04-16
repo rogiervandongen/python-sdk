@@ -188,6 +188,8 @@ class Request(RequestBase):
             innerdict['statsData[extra3]'] = self.stats_data.extra3
         if ParamValidator.not_empty(self.stats_data.domain_id):
             innerdict['statsData[domainId]'] = self.stats_data.domain_id
+        if ParamValidator.not_empty(self.stats_data.object):
+            innerdict['statsData[object]'] = self.stats_data.object
 
     def _merge_sales_data_dict(self, innerdict):
         if ParamValidator.is_null(self.sale_data):
