@@ -2,6 +2,7 @@ import json
 
 from marshmallow import Schema, fields, pre_load, post_load
 
+from paynlsdk.api.client import PAYNL_CLIENT_VERSION
 from paynlsdk.api.requestbase import RequestBase
 from paynlsdk.api.responsebase import ResponseBase
 from paynlsdk.objects import TransactionData, TransactionStartStatsData, SalesData, TransactionEndUser, ErrorSchema,\
@@ -168,7 +169,11 @@ class Request(RequestBase):
 
     def _merge_stats_data_dict(self, innerdict):
         if ParamValidator.is_null(self.stats_data):
+            innerdict['statsData[object]'] = 'pythonsdk v' + PAYNL_CLIENT_VERSION
             return
+        if ParamValidator.is_empty(self.stats_data.object):
+            innerdict['statsData[object]'] = 'pythonsdk v' + PAYNL_CLIENT_VERSION
+
         if ParamValidator.not_empty(self.stats_data.promotor_id):
             innerdict['statsData[promotorId]'] = self.stats_data.promotor_id
         if ParamValidator.not_empty(self.stats_data.info):
